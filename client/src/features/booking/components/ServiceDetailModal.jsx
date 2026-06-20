@@ -16,7 +16,7 @@ export function ServiceDetailModal({
   onToggleService,
   onClose
 }) {
-  if (!service || !isOpen) return null;
+  if (!service) return null;
 
   return (
     <AnimatePresence>

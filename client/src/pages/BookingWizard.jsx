@@ -1,29 +1,26 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, lazy, Suspense } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, X, Check, CheckCircle2, ChevronRight, Scissors } from 'lucide-react';
 import { format, startOfToday } from 'date-fns';
 import { useAuth } from '../hooks/useAuth';
 import { appointmentAPI } from '../services/appointmentService';
-import { authAPI, authUtils } from '../services/authService';
+import { authAPI } from '../services/authService';
 import { serviceAPI } from '../services/serviceMenu';
 import { barberAPI } from '../services/barberService';
-import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google';
 
-// Step Components
+// Step Components - lazy loaded (only Step1 needed immediately)
 import { Step1Services } from "../features/booking/steps/Step1Services";
 import { Step2Professionals } from "../features/booking/steps/Step2Professionals";
-import { Step3DateTime } from "../features/booking/steps/Step3DateTime";
-import { Step4Confirm } from "../features/booking/steps/Step4Confirm";
+const Step3DateTime = lazy(() => import("../features/booking/steps/Step3DateTime").then(m => ({ default: m.Step3DateTime })));
+const Step4Confirm = lazy(() => import("../features/booking/steps/Step4Confirm").then(m => ({ default: m.Step4Confirm })));
 
-// Modal Components
-import { ServiceDetailModal } from "../features/booking/components/ServiceDetailModal";
-import { StaffDetailModal } from "../features/booking/components/StaffDetailModal";
-import { LoginModal } from "../features/booking/components/LoginModal";
+// Modal Components - lazy loaded (only shown on demand)
+const ServiceDetailModal = lazy(() => import("../features/booking/components/ServiceDetailModal").then(m => ({ default: m.ServiceDetailModal })));
+const StaffDetailModal = lazy(() => import("../features/booking/components/StaffDetailModal").then(m => ({ default: m.StaffDetailModal })));
+const LoginModal = lazy(() => import("../features/booking/components/LoginModal").then(m => ({ default: m.LoginModal })));
 
 import theshop from "../assets/display-pics/the-shop.jpg";
-
-const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || 'your-google-client-id';
 const API_BASE = import.meta.env.VITE_API_BASE_URL?.replace('/api', '') || 'http://localhost:5001';
 
 const getImageUrl = (image) => {
@@ -138,6 +135,11 @@ export default function BookingWizard() {
     setAuthError(null);
 
     // Frontend validation
+    if (selectedServices.length === 0) {
+      setAuthError("Please select at least one service.");
+      setIsSubmitting(false);
+      return;
+    }
     if (!formData.name.trim()) {
       setAuthError("Please enter your name.");
       setIsSubmitting(false);
@@ -176,7 +178,7 @@ export default function BookingWizard() {
       }
 
       // Create appointments for all selected services
-      const servicesToBook = selectedServices.length > 0 ? selectedServices : [selectedServices[0]];
+      const servicesToBook = selectedServices;
       
       for (const service of servicesToBook) {
         const appointmentData = {
@@ -413,26 +415,30 @@ export default function BookingWizard() {
                 )}
 
                 {step === 3 && (
-                  <Step3DateTime 
-                    selectedStaff={selectedStaff}
-                    selectedDate={selectedDate}
-                    selectedTime={selectedTime}
-                    onSelectDate={(date) => { setSelectedDate(date); setSelectedTime(null); }}
-                    onSelectTime={setSelectedTime}
-                    onChangeStaff={() => setStep(2)}
-                  />
+                  <Suspense fallback={<div className="flex items-center justify-center py-20"><div className="w-6 h-6 border-2 border-vintage-tan/30 border-t-vintage-tan rounded-full animate-spin" /></div>}>
+                    <Step3DateTime 
+                      selectedStaff={selectedStaff}
+                      selectedDate={selectedDate}
+                      selectedTime={selectedTime}
+                      onSelectDate={(date) => { setSelectedDate(date); setSelectedTime(null); }}
+                      onSelectTime={setSelectedTime}
+                      onChangeStaff={() => setStep(2)}
+                    />
+                  </Suspense>
                 )}
 
                 {step === 4 && (
-                  <Step4Confirm 
-                    currentUser={currentUser}
-                    formData={formData}
-                    onFormChange={setFormData}
-                    onAuthRequired={() => setShowLoginModal(true)}
-                    onSignOut={logout}
-                    isSubmitting={isSubmitting}
-                    authError={authError}
-                  />
+                  <Suspense fallback={<div className="flex items-center justify-center py-20"><div className="w-6 h-6 border-2 border-vintage-tan/30 border-t-vintage-tan rounded-full animate-spin" /></div>}>
+                    <Step4Confirm 
+                      currentUser={currentUser}
+                      formData={formData}
+                      onFormChange={setFormData}
+                      onAuthRequired={() => setShowLoginModal(true)}
+                      onSignOut={logout}
+                      isSubmitting={isSubmitting}
+                      authError={authError}
+                    />
+                  </Suspense>
                 )}
               </motion.div>
             </AnimatePresence>
@@ -583,27 +589,29 @@ export default function BookingWizard() {
       </div>
 
       {/* Modals */}
-      <ServiceDetailModal 
-        service={activeServiceDetail}
-        isOpen={!!activeServiceDetail}
-        selectedServices={selectedServices}
-        onToggleService={toggleService}
-        onClose={() => setActiveServiceDetail(null)}
-      />
+      <Suspense fallback={null}>
+        <ServiceDetailModal 
+          service={activeServiceDetail}
+          isOpen={!!activeServiceDetail}
+          selectedServices={selectedServices}
+          onToggleService={toggleService}
+          onClose={() => setActiveServiceDetail(null)}
+        />
 
-      <StaffDetailModal 
-        staff={activeStaffDetail}
-        isOpen={!!activeStaffDetail}
-        onClose={() => setActiveStaffDetail(null)}
-      />
+        <StaffDetailModal 
+          staff={activeStaffDetail}
+          isOpen={!!activeStaffDetail}
+          onClose={() => setActiveStaffDetail(null)}
+        />
 
-      <LoginModal 
-        isOpen={showLoginModal}
-        authLoading={authLoading}
-        authError={authError}
-        onGoogleSignIn={handleGoogleSignIn}
-        onClose={() => setShowLoginModal(false)}
-      />
+        <LoginModal 
+          isOpen={showLoginModal}
+          authLoading={authLoading}
+          authError={authError}
+          onGoogleSignIn={handleGoogleSignIn}
+          onClose={() => setShowLoginModal(false)}
+        />
+      </Suspense>
     </div>
   );
 }

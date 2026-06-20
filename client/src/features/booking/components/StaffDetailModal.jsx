@@ -8,7 +8,7 @@ export function StaffDetailModal({
   isOpen,
   onClose
 }) {
-  if (!staff || !isOpen) return null;
+  if (!staff) return null;
 
   const getStaffImage = () => {
     if (staff.profileImage) {

@@ -108,7 +108,8 @@ export const BarbersTab = () => {
         await barberAPI.deleteBarber(id);
         fetchBarbers();
       } catch (err) {
-        console.error('Failed to delete barber:', err);
+        const message = err.response?.data?.message || 'Failed to delete barber.';
+        alert(message);
       }
     }
   };
@@ -206,7 +207,7 @@ export const BarbersTab = () => {
                    <div className="col-span-4 md:col-span-2 mt-2 md:mt-0">
                       <span className="text-[13px] font-bold text-[#18181b]">₱{(b.stats?.totalRevenue || 0).toLocaleString()}</span>
                    </div>
-                   <div className="col-span-12 md:col-span-1 text-right flex justify-end gap-2 text-[#efefef] mt-2 md:mt-0">
+                    <div className="col-span-12 md:col-span-1 text-right flex justify-end gap-2 text-[#a1a1aa] mt-2 md:mt-0">
                       <button 
                         onClick={() => handleOpenModal(b)}
                         className="hover:text-vintage-tan transition-colors p-1"
