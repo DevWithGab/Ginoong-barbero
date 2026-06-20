@@ -125,7 +125,7 @@ export function Step1Services({
                     {category} Series
                   </span>
                   <span className="ml-2 text-[9px] font-mono bg-white/5 text-white/40 px-2 py-0.5 rounded-full">
-                    {catServices.length} Ritual{catServices.length !== 1 && 's'}
+                    {catServices.length} Service{catServices.length !== 1 && 's'}
                   </span>
                   {hasSelectedService && (
                     <span className="bg-vintage-tan/20 text-vintage-tan text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-sm border border-vintage-tan/30 ml-2">
@@ -199,12 +199,6 @@ function ServiceCard({ service, index, selectedServices, onToggleService, onView
           <h3 className="font-serif font-black text-xl sm:text-2xl uppercase tracking-tight text-white group-hover/item:text-vintage-tan transition-colors">
             {service.name}
           </h3>
-          {isPremium && (
-            <span className="bg-vintage-tan/10 text-vintage-tan text-[8px] font-black uppercase tracking-widest px-2.5 py-1 rounded border border-vintage-tan/20 flex items-center gap-1">
-              <Sparkles size={8} />
-              Premium Ritual
-            </span>
-          )}
         </div>
 
         <div className="flex items-center gap-3 text-[10px] font-bold uppercase tracking-widest text-white/40">
