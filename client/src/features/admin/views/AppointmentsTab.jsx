@@ -23,6 +23,11 @@ import {
 } from "lucide-react";
 import { SimpleStatCard } from "../UI/SimpleStatCard";
 import { appointmentAPI } from "../../../services/appointmentService";
+import {
+  startOfMonth, endOfMonth, startOfWeek, endOfWeek,
+  eachDayOfInterval, format, isSameMonth, isSameDay,
+  addMonths, subMonths, isToday
+} from "date-fns";
 
 export const AppointmentsTab = ({ 
   bookings, 
@@ -40,6 +45,9 @@ export const AppointmentsTab = ({
   const [localSearch, setLocalSearch] = useState('');
   const [selectedAppointment, setSelectedAppointment] = useState(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
+  const [calendarDate, setCalendarDate] = useState(new Date());
+  const [selectedDate, setSelectedDate] = useState(null);
+  const [appointmentDates, setAppointmentDates] = useState([]);
 
   const fetchAppointments = useCallback(async (page = 1, status = null) => {
     setLoading(true);
@@ -56,6 +64,7 @@ export const AppointmentsTab = ({
         if (statusMap[status]) params.status = statusMap[status];
       }
       if (localSearch) params.search = localSearch;
+      if (selectedDate) params.date = format(selectedDate, 'yyyy-MM-dd');
       const res = await appointmentAPI.getAppointments(params);
       setAppointments(res.data || []);
       setPagination(res.pagination || { page: 1, limit: 10, total: 0, pages: 0 });
@@ -64,7 +73,7 @@ export const AppointmentsTab = ({
     } finally {
       setLoading(false);
     }
-  }, [localSearch]);
+  }, [localSearch, selectedDate]);
 
   const fetchStats = useCallback(async () => {
     try {
@@ -78,6 +87,8 @@ export const AppointmentsTab = ({
         cancelled: all.filter(a => a.status === 'Cancelled').length,
         rejected: all.filter(a => a.status === 'Rejected').length,
       });
+      const dates = all.map(a => new Date(a.dateTime).toDateString());
+      setAppointmentDates([...new Set(dates)]);
     } catch (err) {
       console.error('Failed to fetch stats:', err);
     }
@@ -91,6 +102,14 @@ export const AppointmentsTab = ({
   useEffect(() => {
     fetchAppointments(1, activeSubTab);
   }, [activeSubTab, fetchAppointments]);
+
+  const handleDateClick = (date) => {
+    if (isSameDay(date, selectedDate)) {
+      setSelectedDate(null);
+    } else {
+      setSelectedDate(date);
+    }
+  };
 
   const handleUpdateStatus = async (id, newStatus) => {
     try {
@@ -390,31 +409,54 @@ export const AppointmentsTab = ({
         {/* Calendar Widget */}
         <div className="bg-[#ffffff] border border-[#efefef] rounded-lg p-8 space-y-8 shadow-sm">
            <div className="flex justify-between items-center">
-              <ChevronLeft size={16} className="text-[#cccccc] cursor-pointer hover:text-[#18181b] transition-colors" />
-              <p className="text-[11px] font-black uppercase tracking-[0.3em] text-[#18181b]">MAY 2026</p>
-              <ChevronRight size={16} className="text-[#cccccc] cursor-pointer hover:text-[#18181b] transition-colors" />
+              <button onClick={() => setCalendarDate(prev => subMonths(prev, 1))} className="text-[#cccccc] hover:text-[#18181b] transition-colors">
+                <ChevronLeft size={16} />
+              </button>
+              <p className="text-[11px] font-black uppercase tracking-[0.3em] text-[#18181b]">{format(calendarDate, 'MMMM yyyy')}</p>
+              <button onClick={() => setCalendarDate(prev => addMonths(prev, 1))} className="text-[#cccccc] hover:text-[#18181b] transition-colors">
+                <ChevronRight size={16} />
+              </button>
            </div>
            
+           {selectedDate && (
+             <button onClick={() => setSelectedDate(null)} className="w-full text-[10px] font-bold uppercase tracking-widest text-vintage-tan hover:text-vintage-tan/80 transition-colors">
+               Showing: {format(selectedDate, 'MMM d, yyyy')} · Click date again to clear
+             </button>
+           )}
+
            <div className="grid grid-cols-7 gap-y-6 text-center" role="grid" aria-label="Calendar">
-              {['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'].map(d => (
-                <span key={d} className="text-[9px] font-black text-[#cccccc] tracking-widest" role="columnheader">{d}</span>
-              ))}
-              {[26, 27, 28, 29, 30, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 1, 2, 3, 4, 5, 6].map((day, i) => {
-                const isCurrentMonth = i >= 5 && i < 36;
-                const isSelected = day === 19 && isCurrentMonth;
-                const hasDot = [5, 11, 15, 19, 26, 30].includes(day) && isCurrentMonth;
-                return (
-                  <div key={i} className="flex flex-col items-center" role="gridcell">
-                    <span className={`text-[11px] font-bold cursor-pointer transition-colors w-7 h-7 flex items-center justify-center rounded-full leading-none ${
-                        isSelected ? 'bg-vintage-tan text-white' : 
-                        isCurrentMonth ? 'text-[#18181b] hover:text-vintage-tan' : 'text-[#efefef]'
-                    }`}>
-                      {day}
-                    </span>
-                    {hasDot && !isSelected && <div className="w-1 h-1 rounded-full bg-vintage-tan mt-1" aria-hidden="true"></div>}
-                  </div>
-                );
-              })}
+             {['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'].map(d => (
+               <span key={d} className="text-[9px] font-black text-[#cccccc] tracking-widest" role="columnheader">{d}</span>
+             ))}
+             {(() => {
+               const monthStart = startOfMonth(calendarDate);
+               const monthEnd = endOfMonth(calendarDate);
+               const calStart = startOfWeek(monthStart);
+               const calEnd = endOfWeek(monthEnd);
+               const days = eachDayOfInterval({ start: calStart, end: calEnd });
+
+               return days.map((day, i) => {
+                 const inMonth = isSameMonth(day, calendarDate);
+                 const selected = selectedDate && isSameDay(day, selectedDate);
+                 const today = isToday(day);
+                 const hasAppt = appointmentDates.includes(day.toDateString());
+                 return (
+                   <div key={i} className="flex flex-col items-center" role="gridcell">
+                     <button
+                       onClick={() => handleDateClick(day)}
+                       className={`text-[11px] font-bold cursor-pointer transition-all w-7 h-7 flex items-center justify-center rounded-full leading-none ${
+                           selected ? 'bg-vintage-tan text-white shadow-lg shadow-vintage-tan/20' :
+                           today ? 'bg-vintage-tan/10 text-vintage-tan font-black' :
+                           inMonth ? 'text-[#18181b] hover:bg-vintage-tan/10 hover:text-vintage-tan' : 'text-[#efefef] cursor-default'
+                       }`}
+                     >
+                       {format(day, 'd')}
+                     </button>
+                     {hasAppt && inMonth && !selected && <div className="w-1 h-1 rounded-full bg-vintage-tan mt-1" aria-hidden="true"></div>}
+                   </div>
+                 );
+               });
+             })()}
            </div>
         </div>
 
