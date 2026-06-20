@@ -143,44 +143,123 @@ export const DashboardHome = () => {
       {/* Lower Section Split */}
       <div className="grid grid-cols-12 gap-6 md:gap-8">
          {/* Today's Schedule */}
-         <div className="col-span-12 lg:col-span-7 bg-[#0c0c0c] border border-[#1a1a1a] rounded-xl p-5 sm:p-10 space-y-6 sm:space-y-10">
-            <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest">
-               <p className="text-[#333]">TODAY'S SCHEDULE</p>
-               <button className="text-vintage-tan hover:brightness-125 transition-all underline underline-offset-4 decoration-vintage-tan/20">VIEW CALENDAR</button>
+         <div className="col-span-12 lg:col-span-7 bg-[#0c0c0c] border border-[#1a1a1a] rounded-xl overflow-hidden shadow-2xl shadow-black/40">
+            {/* Header */}
+            <div className="p-5 sm:p-8 pb-0 sm:pb-0">
+               <div className="flex justify-between items-center">
+                  <div className="flex items-center gap-3">
+                     <div className="w-8 h-8 rounded-lg bg-vintage-tan/10 flex items-center justify-center">
+                        <Calendar size={14} className="text-vintage-tan" />
+                     </div>
+                     <div>
+                        <p className="text-[10px] font-black uppercase tracking-[0.3em] text-[#555]">TODAY'S SCHEDULE</p>
+                        <p className="text-[9px] text-[#333] font-bold mt-0.5">{format(new Date(), "EEEE, MMMM d")}</p>
+                     </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                     {schedule.length > 0 && (
+                        <span className="px-2.5 py-1 rounded-full bg-vintage-tan/10 text-vintage-tan text-[9px] font-black">
+                           {schedule.length} {schedule.length === 1 ? 'APPT' : 'APPTS'}
+                        </span>
+                     )}
+                     <button className="text-[9px] font-black uppercase tracking-widest text-vintage-tan/60 hover:text-vintage-tan transition-colors border border-vintage-tan/10 hover:border-vintage-tan/30 px-3 py-1.5 rounded-full">
+                        VIEW ALL
+                     </button>
+                  </div>
+               </div>
             </div>
 
-            <div className="relative pl-16 xs:pl-20 sm:pl-28 space-y-0">
-               <div className="absolute left-[54px] xs:left-[66px] sm:left-[88px] top-4 bottom-4 w-px bg-zinc-800"></div>
-               
+            {/* Schedule List */}
+            <div className="p-5 sm:p-8 pt-4 sm:pt-6">
                {schedule.length === 0 ? (
-                 <div className="py-10 text-center text-[#444] text-[13px] font-bold">No appointments today</div>
+                  <div className="py-12 flex flex-col items-center justify-center">
+                     <div className="w-14 h-14 rounded-full bg-[#111] border border-[#1a1a1a] flex items-center justify-center mb-4">
+                        <Calendar size={20} className="text-[#333]" />
+                     </div>
+                     <p className="text-[12px] font-bold text-[#444]">No appointments today</p>
+                     <p className="text-[10px] text-[#333] mt-1">Your schedule is clear</p>
+                  </div>
                ) : (
-                 schedule.slice(0, 5).map((item, idx) => (
-                   <div key={item._id || idx} className="flex items-center justify-between py-6 relative group w-full">
-                      {/* Time & Dot */}
-                      <div className="flex items-center gap-2 sm:gap-4 absolute left-0">
-                         <p className="text-[9px] sm:text-[11px] font-black text-[#555] w-12 xs:w-14 sm:w-20 text-right shrink-0">{formatTime(item.dateTime)}</p>
-                         <div className="w-2.5 h-2.5 rounded-full bg-[#111] border-2 border-[#1a1a1a] relative z-10 group-hover:border-vintage-tan transition-colors shrink-0"></div>
-                      </div>
+                  <div className="space-y-2">
+                     {schedule.slice(0, 5).map((item, idx) => {
+                        const isConfirmed = item.status === 'Confirmed';
+                        const isPending = item.status === 'Pending';
+                        return (
+                           <div 
+                             key={item._id || idx} 
+                             className={`flex items-center gap-4 p-3 sm:p-4 rounded-xl border transition-all duration-300 group cursor-pointer ${
+                               isPending 
+                                 ? 'bg-[#111] border-vintage-tan/10 hover:border-vintage-tan/30 hover:bg-[#151510]' 
+                                 : 'bg-[#111] border-[#1a1a1a] hover:border-emerald-500/20 hover:bg-[#101510]'
+                             }`}
+                           >
+                              {/* Time Badge */}
+                              <div className={`shrink-0 w-16 sm:w-20 text-center py-2 rounded-lg ${
+                                isPending ? 'bg-vintage-tan/5 border border-vintage-tan/10' : 'bg-emerald-500/5 border border-emerald-500/10'
+                              }`}>
+                                 <p className="text-[11px] sm:text-[13px] font-black text-white leading-none">{formatTime(item.dateTime)}</p>
+                              </div>
 
-                      <div className="flex items-center gap-3 ml-16 xs:ml-20 sm:ml-24 flex-1 min-w-0">
-                          <img src={item.customer?.picture || `https://api.dicebear.com/7.x/avataaars/svg?seed=${item.customer?.name}`} className="w-8 h-8 sm:w-10 sm:h-10 rounded-full border border-[#1a1a1a] bg-[#111] shrink-0" alt="" />
-                         <div className="min-w-0">
-                            <p className="text-xs sm:text-[13px] font-bold text-white group-hover:text-vintage-tan transition-colors truncate">{item.customer?.name}</p>
-                            <p className="text-[9px] sm:text-[10px] font-medium text-[#444] truncate">{item.service?.name}</p>
-                         </div>
-                      </div>
+                              {/* Customer Avatar */}
+                              <div className="relative shrink-0">
+                                 <img 
+                                   src={item.customer?.picture || `https://api.dicebear.com/7.x/avataaars/svg?seed=${item.customer?.name}`} 
+                                   className="w-10 h-10 sm:w-11 sm:h-11 rounded-full border-2 border-[#1a1a1a] bg-[#111] object-cover group-hover:scale-105 transition-transform" 
+                                   alt="" 
+                                 />
+                                 <div className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-[#0c0c0c] ${
+                                   isPending ? 'bg-vintage-tan' : 'bg-emerald-500'
+                                 }`}></div>
+                              </div>
 
-                      <div className="flex items-center gap-2 sm:gap-6 shrink-0 ml-2">
-                         <p className="text-[10px] sm:text-[11px] font-bold text-[#888] hidden sm:block">{item.barber?.name}</p>
-                         <span className={`px-1.5 py-0.5 sm:px-2 rounded text-[7px] sm:text-[8px] font-black uppercase tracking-wider border transition-all ${
-                           item.status === 'Confirmed' ? 'bg-[#1a1a1a] text-emerald-500 border-emerald-500/10' : 'bg-[#1a1a1a] text-vintage-tan border-vintage-tan/10'
-                         }`}>
-                           {item.status}
-                         </span>
-                      </div>
-                   </div>
-                 ))
+                              {/* Customer Info */}
+                              <div className="flex-1 min-w-0">
+                                 <p className="text-[12px] sm:text-[14px] font-bold text-white group-hover:text-vintage-tan transition-colors truncate leading-tight">
+                                    {item.customer?.name}
+                                 </p>
+                                 <div className="flex items-center gap-2 mt-1">
+                                    <p className="text-[9px] sm:text-[10px] font-medium text-[#555] truncate">{item.service?.name}</p>
+                                    {item.service?.duration && (
+                                       <>
+                                          <span className="text-[#333]">·</span>
+                                          <p className="text-[9px] sm:text-[10px] font-medium text-[#444]">{item.service.duration}m</p>
+                                       </>
+                                    )}
+                                 </div>
+                              </div>
+
+                              {/* Barber + Status */}
+                              <div className="flex items-center gap-3 shrink-0">
+                                 {item.barber?.name && (
+                                    <div className="hidden sm:flex items-center gap-2 bg-[#1a1a1a] rounded-full px-3 py-1.5">
+                                       <img 
+                                         src={item.barber?.profileImage || `https://api.dicebear.com/7.x/avataaars/svg?seed=${item.barber?.name}`} 
+                                         className="w-4 h-4 rounded-full bg-[#111]" 
+                                         alt="" 
+                                       />
+                                       <p className="text-[9px] font-bold text-[#666] max-w-[80px] truncate">{item.barber.name}</p>
+                                    </div>
+                                 )}
+                                 <span className={`px-2 py-1 rounded-md text-[7px] sm:text-[8px] font-black uppercase tracking-wider ${
+                                   isConfirmed 
+                                     ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20' 
+                                     : isPending 
+                                       ? 'bg-vintage-tan/10 text-vintage-tan border border-vintage-tan/20'
+                                       : 'bg-[#1a1a1a] text-[#555] border border-[#222]'
+                                 }`}>
+                                    {item.status === 'Confirmed' ? '✓ CONFIRMED' : item.status === 'Pending' ? '● PENDING' : item.status}
+                                 </span>
+                              </div>
+                           </div>
+                        );
+                     })}
+
+                     {schedule.length > 5 && (
+                        <button className="w-full py-3 text-center text-[9px] font-black uppercase tracking-widest text-[#444] hover:text-vintage-tan border border-[#1a1a1a] hover:border-vintage-tan/20 rounded-xl transition-all mt-2">
+                           + {schedule.length - 5} more appointments
+                        </button>
+                     )}
+                  </div>
                )}
             </div>
          </div>

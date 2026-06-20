@@ -393,7 +393,7 @@ const getTodaySchedule = asyncHandler(async (req, res) => {
   const todayAppointments = await Appointment.find({
     dateTime: { $gte: startOfDay, $lte: endOfDay }
   })
-    .populate('customer', 'name phone isVIP')
+    .populate('customer', 'name phone isVIP picture')
     .populate('service', 'name duration category')
     .populate('barber', 'name role')
     .sort({ dateTime: 1 });

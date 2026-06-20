@@ -186,9 +186,6 @@ export const AppointmentsTab = ({
             </h2>
             <p className="text-[13px] font-medium text-[#a1a1aa] max-w-lg">Manage and track all customer appointments. Maintain the rhythm of the shop floor.</p>
           </div>
-          <button className="w-full md:w-auto flex items-center gap-3 px-8 py-3 bg-vintage-tan text-white rounded text-[10px] font-black uppercase tracking-widest hover:brightness-110 transition-all shadow-xl shadow-vintage-tan/10 justify-center text-center active:scale-95 shrink-0">
-            <Plus size={14} /> NEW APPOINTMENT
-          </button>
         </div>
 
         {/* Stats Grid */}
