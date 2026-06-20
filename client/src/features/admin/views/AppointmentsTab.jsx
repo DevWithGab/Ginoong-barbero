@@ -61,7 +61,8 @@ export const AppointmentsTab = ({
           'CANCELLED': 'Cancelled',
           'REJECTED': 'Rejected'
         };
-        if (statusMap[status]) params.status = statusMap[status];
+        const baseStatus = status.replace(/\s*\(.*\)/, '');
+        if (statusMap[baseStatus]) params.status = statusMap[baseStatus];
       }
       if (localSearch) params.search = localSearch;
       if (selectedDate) params.date = format(selectedDate, 'yyyy-MM-dd');
