@@ -21,6 +21,8 @@ import { ServiceDetailModal } from "../features/booking/components/ServiceDetail
 import { StaffDetailModal } from "../features/booking/components/StaffDetailModal";
 import { LoginModal } from "../features/booking/components/LoginModal";
 
+import theshop from "../assets/display-pics/the-shop.jpg";
+
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || 'your-google-client-id';
 const API_BASE = import.meta.env.VITE_API_BASE_URL?.replace('/api', '') || 'http://localhost:5001';
 
@@ -32,7 +34,7 @@ const getImageUrl = (image) => {
 const BUSINESS_INFO = {
   name: "GINOONG BARBERO",
   location: "In front of One Ilocos Sur Hotel, Tamag, Vigan City",
-  photo: "https://images.unsplash.com/photo-1599351431202-1e0f0137899a?auto=format&fit=crop&q=80&w=400"
+  photo: theshop,
 };
 
 export default function BookingWizard() {
