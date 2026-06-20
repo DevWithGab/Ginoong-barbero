@@ -61,10 +61,6 @@ export function Footer({ onBookNow }) {
           </div>
           
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6 md:gap-8 text-[8px] sm:text-[9px] font-bold uppercase tracking-[0.3em] sm:tracking-[0.4em] font-slab text-center">
-            <div className="flex gap-4 sm:gap-6 items-center justify-center">
-              <Link to="/legal" className="opacity-30 hover:opacity-100 hover:text-white transition-all">Policies</Link>
-              <Link to="/legal" className="opacity-30 hover:opacity-100 hover:text-white transition-all">Terms</Link>
-            </div>
             
             <div className="flex flex-wrap gap-4 sm:gap-6 items-center justify-center">
               <Link to="/admin" className="text-vintage-tan/40 hover:text-vintage-tan transition-all sm:border-l sm:border-white/10 sm:pl-6 flex items-center justify-center gap-2">

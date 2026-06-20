@@ -5,8 +5,10 @@ import { LandingNavbar } from '../features/landing/components/navbar/LandingNavb
 import { HeroSection } from '../features/landing/components/sections/HeroSection';
 import { OurStory } from '../features/landing/components/sections/OurStory';
 import { ValuesSection } from '../features/landing/components/sections/Values';
+import { WhyChooseUs } from '../features/landing/components/sections/WhyChooseUs';
 import { Testimonials } from '../features/landing/components/sections/Testimonials';
 import { VisualLegacy } from '../features/landing/components/sections/VisualLegacy';
+import { MakeAppointment } from '../features/landing/components/sections/MakeAppointment';
 import { LocationHours } from '../features/landing/components/sections/LocationHours';
 import { Footer } from '../components/Layout/Footer';
 
@@ -26,9 +28,11 @@ export default function LandingPage() {
       <HeroSection onBookNow={handleBookNow} />
       <OurStory />
       <ValuesSection />
+      <WhyChooseUs />
 
       {/* Visual Legacy Gallery */}
       <VisualLegacy />
+      <MakeAppointment onBookNow={handleBookNow} />
       <LocationHours />
 
       <Footer onBookNow={() => navigate('/book')} />

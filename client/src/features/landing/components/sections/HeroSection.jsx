@@ -5,7 +5,7 @@ import heroBg from '../../../../assets/background/hero-bg-ginoo.jpg';
 
 export function HeroSection({ onBookNow }) {
   return (
-    <section id="hero" className="relative min-h-screen flex items-center bg-vintage-charcoal pt-20">
+    <section id="hero" className="relative min-h-screen flex items-center bg-vintage-charcoal">
       <div id="main-content" className="sr-only">Main Content Start</div>
       {/* Background Decorative Text */}
       <div className="absolute top-1/2 left-0 -translate-y-1/2 text-[20rem] font-serif font-bold text-white/[0.02] select-none pointer-events-none uppercase tracking-tighter leading-none z-0">
@@ -14,7 +14,7 @@ export function HeroSection({ onBookNow }) {
 
       <div className="grid lg:grid-cols-2 w-full h-full min-h-screen relative z-10">
         {/* Left Content */}
-        <div className="relative z-10 flex flex-col justify-center px-6 md:px-12 lg:px-24 py-20 bg-vintage-charcoal/40 backdrop-blur-sm">
+        <div className="relative z-10 flex flex-col justify-center px-6 md:px-12 lg:px-24 pt-40 pb-20 md:pt-48 md:py-20 lg:py-20 bg-vintage-charcoal/40 backdrop-blur-sm">
           <motion.div
             initial="hidden"
             animate="visible"
@@ -112,18 +112,13 @@ export function HeroSection({ onBookNow }) {
 
         {/* Right Image Container */}
         <div className="relative h-[50vh] sm:h-[70vh] lg:absolute lg:inset-y-0 lg:right-0 lg:w-1/2 lg:h-full overflow-hidden group perspective-1000">
-          {/* Animated Decorative Frame */}
-          <div className="absolute inset-4 border border-white/0 group-hover:border-vintage-tan/30 transition-all duration-700 z-30 pointer-events-none"></div>
-          <div className="absolute inset-8 border border-white/0 group-hover:border-white/10 transition-all duration-1000 z-30 pointer-events-none delay-100"></div>
 
           <motion.div
             initial={{ opacity: 0, scale: 1.15 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 2.5, ease: [0.19, 1, 0.22, 1] }}
             whileHover={{ 
-              scale: 1.08,
-              rotateY: 2,
-              rotateX: -1,
+              scale: 1.05,
               transition: { duration: 1.2, ease: "easeOut" }
             }}
             className="w-full h-full relative"

@@ -30,7 +30,7 @@ export function NavLogo({ isScrolled = false, onClick }) {
       <img 
         src={logo} 
         alt="Ginoong Barbero Logo" 
-        className="h-12 md:h-14 lg:h-16 w-auto object-contain group-hover:opacity-90 transition-opacity duration-700"
+        className="h-12 md:h-14 lg:h-16 max-w-[140px] md:max-w-[160px] lg:max-w-[180px] w-auto object-contain group-hover:opacity-90 transition-opacity duration-700"
       />
     </motion.div>
   );
