@@ -1,6 +1,13 @@
 import { motion } from 'framer-motion';
 import { Check, User, Users } from 'lucide-react';
 
+const API_BASE = import.meta.env.VITE_API_BASE_URL?.replace('/api', '') || 'http://localhost:5001';
+
+const getImageUrl = (image) => {
+  if (!image) return null;
+  return image.startsWith('http') ? image : `${API_BASE}${image}`;
+};
+
 export function Step2Professionals({ 
   selectedStaff, 
   onSelectStaff,
@@ -74,7 +81,7 @@ export function Step2Professionals({
               <div className="relative shrink-0 self-center sm:self-auto">
                 <div className={`absolute -inset-1 border rounded-full transition-transform duration-700 ${isSelected ? "border-vintage-tan scale-105" : "border-transparent group-hover:scale-105 group-hover:border-white/15"}`}></div>
                 <img 
-                  src={member.profileImage || "https://images.unsplash.com/photo-1503951914875-452162b0f3f1?auto=format&fit=crop&q=80&w=200"} 
+                  src={getImageUrl(member.profileImage) || "https://images.unsplash.com/photo-1503951914875-452162b0f3f1?auto=format&fit=crop&q=80&w=200"} 
                   className={`w-14 h-14 sm:w-20 sm:h-20 rounded-full object-cover border border-white/10 shadow-lg relative z-10 transition-all duration-500 ${isSelected ? 'grayscale-0 contrast-105' : 'grayscale group-hover:grayscale-0'}`} 
                   alt={member.name} 
                   referrerPolicy="no-referrer" 

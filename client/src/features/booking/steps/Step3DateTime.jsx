@@ -4,6 +4,13 @@ import { Check, Lock, Bookmark, Scissors, Sparkles } from 'lucide-react';
 import { addDays, startOfToday, isSameDay, isToday, format } from 'date-fns';
 import { appointmentAPI } from '../../../services/appointmentService';
 
+const API_BASE = import.meta.env.VITE_API_BASE_URL?.replace('/api', '') || 'http://localhost:5001';
+
+const getImageUrl = (image) => {
+  if (!image) return null;
+  return image.startsWith('http') ? image : `${API_BASE}${image}`;
+};
+
 export function Step3DateTime({ 
   selectedStaff,
   selectedDate,
@@ -54,7 +61,7 @@ export function Step3DateTime({
       <div className="flex items-center justify-between p-3 sm:p-4 bg-vintage-card/30 border border-white/5 rounded-2xl gap-2">
         <div className="flex items-center gap-2.5 min-w-0">
           <img 
-            src={selectedStaff?.photo || selectedStaff?.profileImage || "https://images.unsplash.com/photo-1503951914875-452162b0f3f1?auto=format&fit=crop&q=80&w=200"} 
+            src={getImageUrl(selectedStaff?.photo || selectedStaff?.profileImage) || "https://images.unsplash.com/photo-1503951914875-452162b0f3f1?auto=format&fit=crop&q=80&w=200"} 
             className="w-8 h-8 sm:w-11 sm:h-11 rounded-full object-cover border border-white/10 shrink-0" 
             alt="" 
           />

@@ -35,7 +35,8 @@ export const AppointmentsTab = ({
   setSearchTerm, 
   filter, 
   setFilter, 
-  updateStatus 
+  updateStatus,
+  onStatusChange
 }) => {
   const [activeSubTab, setActiveSubTab] = useState("ALL APPOINTMENTS");
   const [appointments, setAppointments] = useState([]);
@@ -104,6 +105,22 @@ export const AppointmentsTab = ({
     fetchAppointments(1, activeSubTab);
   }, [activeSubTab, fetchAppointments]);
 
+  useEffect(() => {
+    const API_BASE = import.meta.env.VITE_API_BASE_URL?.replace('/api', '') || 'http://localhost:5001';
+    const eventSource = new EventSource(`${API_BASE}/api/events`);
+
+    const refresh = () => {
+      fetchAppointments(1, activeSubTab);
+      fetchStats();
+      onStatusChange?.();
+    };
+
+    eventSource.addEventListener('appointment:created', refresh);
+    eventSource.addEventListener('appointment:updated', refresh);
+
+    return () => eventSource.close();
+  }, [activeSubTab, fetchAppointments, fetchStats, onStatusChange]);
+
   const handleDateClick = (date) => {
     if (isSameDay(date, selectedDate)) {
       setSelectedDate(null);
@@ -120,6 +137,7 @@ export const AppointmentsTab = ({
       if (selectedAppointment?._id === id) {
         setSelectedAppointment(prev => ({ ...prev, status: newStatus }));
       }
+      onStatusChange?.();
     } catch (err) {
       console.error('Failed to update status:', err);
     }

@@ -8,7 +8,8 @@ export const AdminMobileMenu = ({
   setActiveTab,
   user,
   handleLogout,
-  menuItems
+  menuItems,
+  pendingCount
 }) => {
   return (
     <>
@@ -87,6 +88,11 @@ export const AdminMobileMenu = ({
                     >
                       <item.icon size={18} className={`${activeTab === item.label ? "text-vintage-tan" : "text-[#d4d4d8] transition-colors"} shrink-0`} />
                       <span className="text-[13px] font-bold tracking-tight">{item.label}</span>
+                      {item.label === 'Appointments' && pendingCount > 0 && (
+                        <span className="bg-red-500 text-white text-[9px] font-black rounded-full min-w-[18px] h-[18px] flex items-center justify-center leading-none ml-auto">
+                          {pendingCount > 99 ? '99+' : pendingCount}
+                        </span>
+                      )}
                     </button>
                   ))}
                 </nav>

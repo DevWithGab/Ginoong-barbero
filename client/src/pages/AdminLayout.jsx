@@ -1,4 +1,4 @@
-import { useState, Suspense, lazy } from "react";
+import { useState, useEffect, Suspense, lazy } from "react";
 import { 
   LayoutDashboard,
   ClipboardList,
@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
+import { appointmentAPI } from "../services/appointmentService";
 
 // Extracted UI Components
 import { AdminSidebar } from "../features/admin/components/AdminSidebar";
@@ -26,9 +27,53 @@ const AdminLayout = () => {
   const [filter, setFilter] = useState("all");
   const [sidebarExpanded, setSidebarExpanded] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [pendingCount, setPendingCount] = useState(0);
   const navigate = useNavigate();
 
   const { user, isAdmin, loading, logout } = useAuth();
+
+  const API_BASE = import.meta.env.VITE_API_BASE_URL?.replace('/api', '') || 'http://localhost:5001';
+
+  const fetchPending = async () => {
+    try {
+      const res = await appointmentAPI.getAppointments({ status: 'Pending', limit: 100 });
+      setPendingCount(res.pagination?.total || res.data?.length || 0);
+    } catch (err) {
+      console.error('Failed to fetch pending count:', err);
+    }
+  };
+
+  useEffect(() => {
+    fetchPending();
+
+    const eventSource = new EventSource(`${API_BASE}/api/events`);
+
+    eventSource.addEventListener('appointment:created', () => {
+      fetchPending();
+    });
+
+    eventSource.addEventListener('appointment:updated', () => {
+      fetchPending();
+    });
+
+    eventSource.onerror = () => {
+      eventSource.close();
+      setTimeout(() => {
+        window.location.reload();
+      }, 3000);
+    };
+
+    return () => eventSource.close();
+  }, []);
+
+  const refreshPendingCount = async () => {
+    try {
+      const res = await appointmentAPI.getAppointments({ status: 'Pending', limit: 100 });
+      setPendingCount(res.pagination?.total || res.data?.length || 0);
+    } catch (err) {
+      console.error('Failed to fetch pending count:', err);
+    }
+  };
 
   const handleLogout = async () => {
     await logout();
@@ -63,6 +108,7 @@ const AdminLayout = () => {
         user={user}
         handleLogout={handleLogout}
         menuItems={menuItems}
+        pendingCount={pendingCount}
       />
 
       <AdminSidebar 
@@ -73,6 +119,7 @@ const AdminLayout = () => {
         user={user}
         handleLogout={handleLogout}
         menuItems={menuItems}
+        pendingCount={pendingCount}
       />
 
       {/* Main Content Area */}
@@ -91,6 +138,7 @@ const AdminLayout = () => {
                 <AppointmentsTab 
                   filter={filter}
                   setFilter={setFilter}
+                  onStatusChange={refreshPendingCount}
                 />
               )}
 
