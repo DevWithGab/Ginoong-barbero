@@ -3,7 +3,8 @@ import {
   LayoutDashboard,
   ClipboardList,
   Scissors,
-  UserCircle
+  UserCircle,
+  Image as ImageIcon
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
@@ -18,6 +19,7 @@ const DashboardHome = lazy(() => import('../features/admin/views/DashboardHome')
 const AppointmentsTab = lazy(() => import('../features/admin/views/AppointmentsTab').then(m => ({ default: m.AppointmentsTab })));
 const ServicesTab = lazy(() => import('../features/admin/views/ServicesTab').then(m => ({ default: m.ServicesTab })));
 const BarbersTab = lazy(() => import('../features/admin/views/BarbersTab').then(m => ({ default: m.BarbersTab })));
+const GalleryTab = lazy(() => import('../features/admin/views/GalleryTab').then(m => ({ default: m.GalleryTab })));
 
 const AdminLayout = () => {
   const [activeTab, setActiveTab] = useState("Dashboard");
@@ -38,6 +40,7 @@ const AdminLayout = () => {
     { label: 'Appointments', icon: ClipboardList },
     { label: 'Services', icon: Scissors },
     { label: 'Barbers', icon: UserCircle },
+    { label: 'Gallery', icon: ImageIcon },
   ];
 
   if (loading) return (
@@ -97,6 +100,10 @@ const AdminLayout = () => {
 
               {activeTab === "Barbers" && (
                 <BarbersTab />
+              )}
+
+              {activeTab === "Gallery" && (
+                <GalleryTab />
               )}
             </Suspense>
          </div>

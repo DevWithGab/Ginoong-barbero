@@ -56,6 +56,7 @@ export function MobileMenu({
     { name: 'Customers', href: '/admin/customers', roles: ['admin'] },
     { name: 'Services', href: '/admin/services', roles: ['admin'] },
     { name: 'Barbers', href: '/admin/barbers', roles: ['admin'] },
+    { name: 'Gallery', href: '/admin/gallery', roles: ['admin'] },
     { name: 'Settings', href: '/admin/settings', roles: ['admin'] },
   ];
 

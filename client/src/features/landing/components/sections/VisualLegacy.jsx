@@ -3,29 +3,15 @@ import { useNavigate } from 'react-router-dom';
 import gsap from 'gsap';
 import ScrollTrigger from 'gsap/ScrollTrigger';
 import { galleryAPI } from '../../../../services/galleryService';
-import galleryFeature1 from '../../../../assets/gallery-feature/gallery-feature1.jpg';
-import galleryFeature2 from '../../../../assets/gallery-feature/galleryfeature2.jpg';
-import galleryFeature3 from '../../../../assets/gallery-feature/galleryfeature3.jpg';
-import galleryFeature4 from '../../../../assets/gallery-feature/galleryfeature4.jpg';
-import galleryFeature6 from '../../../../assets/gallery-feature/gallery-feature6.jpg';
-import galleryFeature8 from '../../../../assets/gallery-feature/gallery-feature8.jpg';
-import galleryFeature9 from '../../../../assets/gallery-feature/gallery-feature9.jpg';
-import galleryFeature10 from '../../../../assets/gallery-feature/gallery-feature10.jpg';
-import galleryFeature11 from '../../../../assets/gallery-feature/gallery-feature11.jpg';
 
 gsap.registerPlugin(ScrollTrigger);
 
-const DEFAULT_GALLERY = [
-  { title: 'Our Barbers', category: 'Barbers', description: 'Masters of their craft with years of dedication to the art of barbering.', url: galleryFeature1 },
-  { title: 'Modern Fades', category: 'Haircuts', description: 'Precision fades that define contemporary style with clean transitions.', url: galleryFeature2 },
-  { title: 'Kids Haircut', category: 'Kids', description: 'Gentle and fun haircuts tailored for our youngest clients.', url: galleryFeature3 },
-  { title: 'Maginoo Scents', category: 'Products', description: 'Premium grooming products curated for the distinguished gentleman.', url: galleryFeature4 },
-  { title: 'Classic Cut', category: 'Haircuts', description: 'Timeless techniques that honor the traditions of barbering excellence.', url: galleryFeature6 },
-  { title: 'Craftsmanship', category: 'Haircuts', description: 'Every cut is a testament to patience, skill, and attention to detail.', url: galleryFeature8 },
-  { title: 'Precision Cut', category: 'Haircuts', description: 'Sharp lines and flawless execution define our signature precision cuts.', url: galleryFeature9 },
-  { title: 'The Experience', category: 'Barbershop', description: 'More than a haircut — a ritual of relaxation and refinement.', url: galleryFeature10 },
-  { title: 'The Shop', category: 'Barbershop', description: 'A space where vintage charm meets modern luxury.', url: galleryFeature11 },
-];
+const API_BASE = import.meta.env.VITE_API_BASE_URL?.replace('/api', '') || 'http://localhost:5001';
+
+const getImageUrl = (url) => {
+  if (!url) return '';
+  return url.startsWith('http') ? url : `${API_BASE}${url}`;
+};
 
 export function VisualLegacy() {
   const navigate = useNavigate();
@@ -49,11 +35,9 @@ export function VisualLegacy() {
       const images = response?.data;
       if (images && Array.isArray(images) && images.length > 0) {
         setGalleryImages(images.slice(0, 9));
-      } else {
-        setGalleryImages(DEFAULT_GALLERY);
       }
     } catch {
-      setGalleryImages(DEFAULT_GALLERY);
+      setGalleryImages([]);
     } finally {
       setLoading(false);
     }
@@ -161,7 +145,9 @@ export function VisualLegacy() {
     );
   }
 
-  const displayImages = galleryImages.length > 0 ? galleryImages : DEFAULT_GALLERY;
+  const displayImages = galleryImages;
+
+  if (displayImages.length === 0) return null;
 
   return (
     <section ref={sectionRef} id="portfolio" className="relative bg-vintage-charcoal text-white overflow-hidden">
@@ -260,7 +246,7 @@ export function VisualLegacy() {
               >
                 <div className="relative w-full h-full overflow-hidden bg-stone-900 border border-white/5 shadow-[0_60px_120px_-30px_rgba(0,0,0,0.8)]">
                   <img
-                    src={img.url}
+                    src={getImageUrl(img.url)}
                     alt={img.title}
                     className="w-full h-full object-cover grayscale-[0.3] brightness-75"
                     loading={idx < 3 ? 'eager' : 'lazy'}
@@ -305,7 +291,7 @@ export function VisualLegacy() {
             className="w-full aspect-[3/4] bg-stone-900 border border-white/5 overflow-hidden relative shadow-[0_30px_60px_-20px_rgba(0,0,0,0.8)]"
           >
             <img
-              src={img.url}
+              src={getImageUrl(img.url)}
               alt={img.title}
               className="w-full h-full object-cover grayscale-[0.3] brightness-75"
               loading="lazy"

@@ -19,13 +19,18 @@ import { Footer } from "../components/Layout/Footer";
 import { LandingNavbar } from "../features/landing/components/navbar/LandingNavbar";
 
 const CATEGORY_ICONS = {
-  Featured: Trophy,
-  Artistry: Scissors,
-  Cuts: Sparkles,
-  Equipment: User,
-  Treatment: Clock,
-  History: Star,
-  Lounge: MapPin
+  Barbers: User,
+  Haircuts: Scissors,
+  Kids: Sparkles,
+  Products: Trophy,
+  Barbershop: MapPin
+};
+
+const API_BASE = import.meta.env.VITE_API_BASE_URL?.replace('/api', '') || 'http://localhost:5001';
+
+const getImageUrl = (url) => {
+  if (!url) return '';
+  return url.startsWith('http') ? url : `${API_BASE}${url}`;
 };
 
 export function GalleryPage() {
@@ -198,7 +203,7 @@ export function GalleryPage() {
                 } col-span-full md:col-span-4 aspect-[4/5] md:aspect-auto h-auto md:h-[650px] lg:h-[700px] shadow-2xl w-full max-w-sm sm:max-w-none mx-auto`}
               >
                 <motion.img
-                  src={img.url}
+                  src={getImageUrl(img.url)}
                   alt={img.title}
                   className="w-full h-full object-cover group-hover:scale-105 transition-all duration-[2s] ease-out"
                   referrerPolicy="no-referrer"
@@ -257,14 +262,14 @@ export function GalleryPage() {
               {/* Image */}
               <div className="flex-1 w-full h-full flex items-center justify-center relative p-2 sm:p-4 overflow-hidden">
                 <img
-                  src={selectedImage.url}
+                  src={getImageUrl(selectedImage.url)}
                   alt={selectedImage.title}
                   className="max-h-[50vh] sm:max-h-[60vh] md:max-h-[65vh] max-w-full object-contain mx-auto transition-transform duration-500 rounded z-10"
                   referrerPolicy="no-referrer"
                 />
                 <div
                   className="absolute inset-0 bg-cover bg-center blur-3xl opacity-10 pointer-events-none scale-105"
-                  style={{ backgroundImage: `url(${selectedImage.url})` }}
+                  style={{ backgroundImage: `url(${getImageUrl(selectedImage.url)})` }}
                   aria-hidden="true"
                 />
               </div>

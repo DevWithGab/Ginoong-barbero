@@ -37,5 +37,6 @@ const createUpload = (folder) => {
 
 const uploadBarberPhoto = createUpload('barbers').single('profileImage');
 const uploadServicePhoto = createUpload('services').single('image');
+const uploadGalleryPhoto = createUpload('gallery').single('image');
 
-module.exports = { uploadBarberPhoto, uploadServicePhoto };
+module.exports = { uploadBarberPhoto, uploadServicePhoto, uploadGalleryPhoto };

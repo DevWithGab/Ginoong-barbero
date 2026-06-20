@@ -16,8 +16,8 @@ const galleryImageSchema = new mongoose.Schema({
     type: String,
     required: [true, 'Category is required'],
     enum: {
-      values: ['Featured', 'Artistry', 'Cuts', 'Equipment', 'Treatment', 'History', 'Lounge'],
-      message: 'Category must be one of: Featured, Artistry, Cuts, Equipment, Treatment, History, Lounge'
+      values: ['Barbers', 'Haircuts', 'Kids', 'Products', 'Barbershop'],
+      message: 'Category must be one of: Barbers, Haircuts, Kids, Products, Barbershop'
     }
   },
   description: {

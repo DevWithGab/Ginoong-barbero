@@ -1,114 +1,67 @@
 const asyncHandler = require('express-async-handler');
 const GalleryImage = require('../models/Gallery');
 
-// @desc    Get all gallery images
-// @route   GET /api/gallery
-// @access  Public
 const getGalleryImages = asyncHandler(async (req, res) => {
   const { category, isActive } = req.query;
-
   const filter = {};
   if (category) filter.category = category;
   if (isActive !== undefined) filter.isActive = isActive === 'true';
-
   const images = await GalleryImage.find(filter).sort({ order: 1, createdAt: -1 });
-
-  res.json({
-    success: true,
-    data: images
-  });
+  res.json({ success: true, data: images });
 });
 
-// @desc    Get single gallery image
-// @route   GET /api/gallery/:id
-// @access  Public
 const getGalleryImage = asyncHandler(async (req, res) => {
   const image = await GalleryImage.findById(req.params.id);
-
-  if (!image) {
-    res.status(404);
-    throw new Error('Gallery image not found');
-  }
-
-  res.json({
-    success: true,
-    data: image
-  });
+  if (!image) { res.status(404); throw new Error('Gallery image not found'); }
+  res.json({ success: true, data: image });
 });
 
-// @desc    Create gallery image
-// @route   POST /api/gallery
-// @access  Private (Staff)
 const createGalleryImage = asyncHandler(async (req, res) => {
-  const { title, url, category, description, cols, order } = req.body;
+  const body = req.body || {};
+  const imageUrl = req.file ? `/uploads/gallery/${req.file.filename}` : body.url;
+  if (!imageUrl) { res.status(400); throw new Error('Image file or URL is required'); }
+
+  const categoryValue = (body.category || '').trim();
+  const validCategories = ['Barbers', 'Haircuts', 'Kids', 'Products', 'Barbershop'];
+  if (!categoryValue || !validCategories.includes(categoryValue)) {
+    res.status(400);
+    throw new Error(`Invalid category: "${categoryValue}". Must be one of: ${validCategories.join(', ')}`);
+  }
 
   const image = await GalleryImage.create({
-    title,
-    url,
-    category,
-    description: description || '',
-    cols: cols || '',
-    order: order || 0
+    title: (body.title || 'Untitled').trim(),
+    url: imageUrl,
+    category: categoryValue,
+    description: (body.description || '').trim(),
+    cols: body.cols || '',
+    order: Number(body.order) || 0
   });
-
-  res.status(201).json({
-    success: true,
-    data: image
-  });
+  res.status(201).json({ success: true, data: image });
 });
 
-// @desc    Update gallery image
-// @route   PUT /api/gallery/:id
-// @access  Private (Staff)
 const updateGalleryImage = asyncHandler(async (req, res) => {
   const image = await GalleryImage.findById(req.params.id);
+  if (!image) { res.status(404); throw new Error('Gallery image not found'); }
 
-  if (!image) {
-    res.status(404);
-    throw new Error('Gallery image not found');
-  }
-
-  const { title, url, category, description, cols, order, isActive } = req.body;
-
-  if (title !== undefined) image.title = title;
-  if (url !== undefined) image.url = url;
-  if (category !== undefined) image.category = category;
-  if (description !== undefined) image.description = description;
-  if (cols !== undefined) image.cols = cols;
-  if (order !== undefined) image.order = order;
-  if (isActive !== undefined) image.isActive = isActive;
+  const body = req.body || {};
+  if (body.title !== undefined) image.title = body.title;
+  if (req.file) image.url = `/uploads/gallery/${req.file.filename}`;
+  else if (body.url !== undefined) image.url = body.url;
+  if (body.category !== undefined) image.category = body.category.trim();
+  if (body.description !== undefined) image.description = body.description;
+  if (body.cols !== undefined) image.cols = body.cols;
+  if (body.order !== undefined) image.order = Number(body.order) || 0;
+  if (body.isActive !== undefined) image.isActive = body.isActive === 'true' || body.isActive === true;
 
   const updatedImage = await image.save();
-
-  res.json({
-    success: true,
-    data: updatedImage
-  });
+  res.json({ success: true, data: updatedImage });
 });
 
-// @desc    Delete gallery image
-// @route   DELETE /api/gallery/:id
-// @access  Private (Staff)
 const deleteGalleryImage = asyncHandler(async (req, res) => {
   const image = await GalleryImage.findById(req.params.id);
-
-  if (!image) {
-    res.status(404);
-    throw new Error('Gallery image not found');
-  }
-
+  if (!image) { res.status(404); throw new Error('Gallery image not found'); }
   await image.deleteOne();
-
-  res.json({
-    success: true,
-    message: 'Gallery image deleted successfully'
-  });
+  res.json({ success: true, message: 'Gallery image deleted successfully' });
 });
 
-module.exports = {
-  getGalleryImages,
-  getGalleryImage,
-  createGalleryImage,
-  updateGalleryImage,
-  deleteGalleryImage
-};
+module.exports = { getGalleryImages, getGalleryImage, createGalleryImage, updateGalleryImage, deleteGalleryImage };
