@@ -238,30 +238,43 @@ export function VisualLegacy() {
           <div className="absolute inset-y-0 left-0 w-[10%] lg:w-[15%] bg-gradient-to-r from-vintage-charcoal to-transparent z-30 pointer-events-none" />
           <div className="absolute inset-y-0 right-0 w-[8%] lg:w-[10%] bg-gradient-to-l from-vintage-charcoal to-transparent z-30 pointer-events-none" />
 
-          <div ref={cardsContainerRef} className="relative w-full max-w-sm md:max-w-lg lg:max-w-xl h-[60vh] md:h-[65vh] lg:h-[70vh] overflow-hidden">
+          <div ref={cardsContainerRef} className="relative w-full max-w-md md:max-w-2xl lg:max-w-3xl h-[65vh] md:h-[70vh] lg:h-[75vh] overflow-hidden">
             {displayImages.map((img, idx) => (
               <div
                 key={img._id || idx}
                 className="gallery-card absolute inset-0 w-full h-full"
               >
-                <div className="relative w-full h-full overflow-hidden bg-stone-900 border border-white/5 shadow-[0_60px_120px_-30px_rgba(0,0,0,0.8)]">
+                <div className="relative w-full h-full overflow-hidden bg-stone-900 border border-white/5 shadow-[0_80px_160px_-40px_rgba(0,0,0,0.9)] rounded-xl">
                   <img
                     src={getImageUrl(img.url)}
                     alt={img.title}
-                    className="w-full h-full object-cover grayscale-[0.3] brightness-75"
+                    className="w-full h-full object-cover grayscale-[0.2] brightness-[0.8] hover:grayscale-0 hover:brightness-100 transition-all duration-[1.5s]"
                     loading={idx < 3 ? 'eager' : 'lazy'}
                     referrerPolicy="no-referrer"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-vintage-bg via-transparent to-transparent opacity-60" />
-                  <div className="absolute top-6 left-6 w-10 h-10 border-t border-l border-white/10" />
-                  <div className="absolute bottom-6 right-6 w-10 h-10 border-b border-r border-white/10" />
-                  <div className="absolute bottom-0 left-0 right-0 p-4 md:p-6 lg:p-10">
-                    <span className="text-vintage-tan text-[7px] md:text-[8px] lg:text-[9px] font-bold uppercase tracking-[0.3em] md:tracking-[0.5em] font-slab italic block mb-1 md:mb-2">
-                      {img.category}
-                    </span>
-                    <h4 className="text-base md:text-lg lg:text-2xl font-serif font-bold text-white uppercase leading-none tracking-tighter">
-                      {img.title}
-                    </h4>
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                  <div className="absolute top-6 left-6 w-12 h-12 border-t-2 border-l-2 border-vintage-tan/30 rounded-tl-sm" />
+                  <div className="absolute bottom-6 right-6 w-12 h-12 border-b-2 border-r-2 border-vintage-tan/30 rounded-br-sm" />
+                  <div className="absolute bottom-0 left-0 right-0 p-6 md:p-8 lg:p-12">
+                    <div className="space-y-2 md:space-y-3">
+                      <span className="text-vintage-tan text-[8px] md:text-[9px] lg:text-[10px] font-bold uppercase tracking-[0.4em] md:tracking-[0.6em] font-slab italic block">
+                        {img.category}
+                      </span>
+                      <h4 className="text-xl md:text-2xl lg:text-4xl font-serif font-black text-white uppercase leading-none tracking-tighter">
+                        {img.title}
+                      </h4>
+                      {img.description && (
+                        <p className="text-white/40 text-[10px] md:text-xs font-slab italic leading-relaxed max-w-md hidden sm:block">
+                          {img.description}
+                        </p>
+                      )}
+                      <div className="flex items-center gap-3 pt-2">
+                        <div className="w-8 h-px bg-vintage-tan/50" />
+                        <span className="text-[7px] md:text-[8px] font-bold uppercase tracking-[0.3em] text-white/30">
+                          View in Gallery
+                        </span>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -288,23 +301,32 @@ export function VisualLegacy() {
         {displayImages.map((img, idx) => (
           <div
             key={img._id || idx}
-            className="w-full aspect-[3/4] bg-stone-900 border border-white/5 overflow-hidden relative shadow-[0_30px_60px_-20px_rgba(0,0,0,0.8)]"
+            className="w-full aspect-[3/4] bg-stone-900 border border-white/5 overflow-hidden relative shadow-[0_40px_80px_-20px_rgba(0,0,0,0.9)] rounded-xl"
           >
             <img
               src={getImageUrl(img.url)}
               alt={img.title}
-              className="w-full h-full object-cover grayscale-[0.3] brightness-75"
+              className="w-full h-full object-cover grayscale-[0.2] brightness-[0.8]"
               loading="lazy"
               referrerPolicy="no-referrer"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-vintage-bg via-transparent to-transparent opacity-60" />
-            <div className="absolute bottom-0 left-0 right-0 p-5">
-              <span className="text-vintage-tan text-[8px] font-bold uppercase tracking-[0.5em] font-slab italic block mb-2">
-                {img.category}
-              </span>
-              <h4 className="text-lg font-serif font-bold text-white uppercase leading-none tracking-tighter">
-                {img.title}
-              </h4>
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent" />
+            <div className="absolute top-5 left-5 w-8 h-8 border-t-2 border-l-2 border-vintage-tan/30 rounded-tl-sm" />
+            <div className="absolute bottom-5 right-5 w-8 h-8 border-b-2 border-r-2 border-vintage-tan/30 rounded-br-sm" />
+            <div className="absolute bottom-0 left-0 right-0 p-6">
+              <div className="space-y-2">
+                <span className="text-vintage-tan text-[8px] font-bold uppercase tracking-[0.5em] font-slab italic block">
+                  {img.category}
+                </span>
+                <h4 className="text-xl font-serif font-black text-white uppercase leading-none tracking-tighter">
+                  {img.title}
+                </h4>
+                {img.description && (
+                  <p className="text-white/40 text-[10px] font-slab italic leading-relaxed line-clamp-2">
+                    {img.description}
+                  </p>
+                )}
+              </div>
             </div>
           </div>
         ))}
