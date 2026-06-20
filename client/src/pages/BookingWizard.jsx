@@ -395,7 +395,7 @@ export default function BookingWizard() {
                 {step === 2 && (
                   <Step2Professionals 
                     selectedStaff={selectedStaff}
-                    onSelectStaff={setSelectedStaff}
+                    onSelectStaff={(staff) => { setSelectedStaff(staff); setSelectedTime(null); }}
                     onViewStaffDetail={setActiveStaffDetail}
                     barbers={barbers}
                   />
@@ -406,7 +406,7 @@ export default function BookingWizard() {
                     selectedStaff={selectedStaff}
                     selectedDate={selectedDate}
                     selectedTime={selectedTime}
-                    onSelectDate={setSelectedDate}
+                    onSelectDate={(date) => { setSelectedDate(date); setSelectedTime(null); }}
                     onSelectTime={setSelectedTime}
                     onChangeStaff={() => setStep(2)}
                   />

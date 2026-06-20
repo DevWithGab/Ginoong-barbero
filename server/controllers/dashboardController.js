@@ -14,10 +14,12 @@ const getDashboardMetrics = asyncHandler(async (req, res) => {
   const endOfDay = new Date(today);
   endOfDay.setHours(23, 59, 59, 999);
 
-  // Today's appointments count
-  const todayAppointments = await Appointment.countDocuments({
-    dateTime: { $gte: startOfDay, $lte: endOfDay }
-  });
+  // Today's appointments count (filter by date parts to avoid timezone issues)
+  const allAppointments = await Appointment.find({}).select('dateTime');
+  const todayAppointments = allAppointments.filter(apt => {
+    const d = new Date(apt.dateTime);
+    return d.getFullYear() === today.getFullYear() && d.getMonth() === today.getMonth() && d.getDate() === today.getDate();
+  }).length;
 
   // Pending approvals count
   const pendingApprovals = await Appointment.countDocuments({
@@ -385,27 +387,30 @@ const getCustomerAnalytics = asyncHandler(async (req, res) => {
 // @access  Public
 const getTodaySchedule = asyncHandler(async (req, res) => {
   const today = new Date();
-  const startOfDay = new Date(today);
-  startOfDay.setHours(0, 0, 0, 0);
-  const endOfDay = new Date(today);
-  endOfDay.setHours(23, 59, 59, 999);
+  const todayYear = today.getFullYear();
+  const todayMonth = today.getMonth();
+  const todayDate = today.getDate();
 
-  const todayAppointments = await Appointment.find({
-    dateTime: { $gte: startOfDay, $lte: endOfDay }
+  const todayAppointments = (await Appointment.find({
+    status: { $in: ['Pending', 'Confirmed'] }
   })
     .populate('customer', 'name phone isVIP picture')
     .populate('service', 'name duration category')
     .populate('barber', 'name role')
-    .sort({ dateTime: 1 });
+    .sort({ dateTime: 1 }))
+    .filter(apt => {
+      const d = new Date(apt.dateTime);
+      return d.getFullYear() === todayYear && d.getMonth() === todayMonth && d.getDate() === todayDate;
+    });
 
   // Group appointments by barber
   const scheduleByBarber = {};
   
   todayAppointments.forEach(appointment => {
-    const barberId = appointment.barber._id.toString();
+    const barberId = appointment.barber?._id?.toString() || 'unassigned';
     if (!scheduleByBarber[barberId]) {
       scheduleByBarber[barberId] = {
-        barber: appointment.barber,
+        barber: appointment.barber || { name: 'Any Barber' },
         appointments: []
       };
     }

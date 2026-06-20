@@ -20,7 +20,7 @@ import { StatCard } from "./StatCard";
 import { dashboardAPI } from "../../../services/dashboardService";
 import { useAuth } from "../../../hooks/useAuth";
 
-export const DashboardHome = () => {
+export const DashboardHome = ({ onNavigate }) => {
   const navigate = useNavigate();
   const { user } = useAuth();
 
@@ -162,7 +162,7 @@ export const DashboardHome = () => {
                            {schedule.length} {schedule.length === 1 ? 'APPT' : 'APPTS'}
                         </span>
                      )}
-                     <button className="text-[9px] font-black uppercase tracking-widest text-vintage-tan/60 hover:text-vintage-tan transition-colors border border-vintage-tan/10 hover:border-vintage-tan/30 px-3 py-1.5 rounded-full">
+                     <button onClick={() => onNavigate?.('Appointments')} className="text-[9px] font-black uppercase tracking-widest text-vintage-tan/60 hover:text-vintage-tan transition-colors border border-vintage-tan/10 hover:border-vintage-tan/30 px-3 py-1.5 rounded-full cursor-pointer">
                         VIEW ALL
                      </button>
                   </div>

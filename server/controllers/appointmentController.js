@@ -39,7 +39,7 @@ const createAppointment = asyncHandler(async (req, res) => {
   if (barberId) {
     const conflictingAppointment = await Appointment.findOne({
       barber: barberId,
-      status: { $in: ['Pending', 'Confirmed'] },
+      status: { $in: ['Confirmed'] },
       dateTime: { $lt: endTime },
       $expr: {
         $gt: [
@@ -176,96 +176,67 @@ const getAppointments = asyncHandler(async (req, res) => {
 const getAvailableSlots = asyncHandler(async (req, res) => {
   const { date, barberId } = req.query;
 
-  if (!date || !barberId) {
+  if (!date) {
     res.status(400);
-    throw new Error('Date and barber ID are required');
+    throw new Error('Date is required');
   }
 
-  // Check if barber exists
-  const barber = await Barber.findById(barberId);
-  if (!barber || barber.status !== 'Active') {
-    res.status(404);
-    throw new Error('Barber not found or inactive');
+  const [year, month, day] = date.split('-').map(Number);
+
+  const filter = {
+    status: { $in: ['Confirmed'] }
+  };
+
+  if (barberId) {
+    filter.barber = barberId;
   }
 
-  const targetDate = new Date(date);
-  // Use UTC to avoid timezone issues
-  const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-  const dayName = days[targetDate.getUTCDay()];
+  const existingAppointments = await Appointment.find(filter).populate('service', 'duration');
 
-  // Check if barber works on this day
-  if (!barber.workingDays.includes(dayName)) {
-    return res.json({
-      success: true,
-      data: [],
-      message: 'Barber does not work on this day'
-    });
-  }
+  // Filter to only appointments on the target date (compare date parts)
+  const targetAppointments = existingAppointments.filter(apt => {
+    const d = new Date(apt.dateTime);
+    return d.getFullYear() === year && d.getMonth() === month - 1 && d.getDate() === day;
+  });
 
-  // Get existing appointments for the barber on this date
-  const startOfDay = new Date(targetDate);
-  startOfDay.setHours(0, 0, 0, 0);
-  const endOfDay = new Date(targetDate);
-  endOfDay.setHours(23, 59, 59, 999);
+  // All time slots (matching the frontend list)
+  const allSlots = [
+    "09:00 AM", "09:30 AM", "10:00 AM", "10:30 AM", "11:00 AM", "11:30 AM",
+    "12:00 PM", "01:30 PM", "02:00 PM", "02:30 PM", "03:00 PM", "03:30 PM",
+    "04:00 PM", "04:30 PM", "05:00 PM", "05:30 PM"
+  ];
 
-  const existingAppointments = await Appointment.find({
-    barber: barberId,
-    dateTime: { $gte: startOfDay, $lte: endOfDay },
-    status: { $in: ['Pending', 'Confirmed'] }
-  }).populate('service', 'duration');
+  // Build time ranges from existing appointments
+  const bookedTimeRanges = targetAppointments.map(apt => {
+    const aptDate = new Date(apt.dateTime);
+    const start = new Date(aptDate.getFullYear(), aptDate.getMonth(), aptDate.getDate(), aptDate.getHours(), aptDate.getMinutes(), 0, 0);
+    const end = new Date(start.getTime() + (apt.duration * 60000));
+    return { start, end };
+  });
 
-  // Generate time slots (30-minute intervals)
-  const workStart = barber.workingHours.start.split(':');
-  const workEnd = barber.workingHours.end.split(':');
-  
-  const startHour = parseInt(workStart[0]);
-  const startMinute = parseInt(workStart[1]);
-  const endHour = parseInt(workEnd[0]);
-  const endMinute = parseInt(workEnd[1]);
+  const now = new Date();
 
-  const availableSlots = [];
-  const slotDuration = 30; // 30 minutes
+  const availableSlots = allSlots.map(time => {
+    const [timePart, period] = time.split(' ');
+    let [hours, minutes] = timePart.split(':').map(Number);
+    if (period === 'PM' && hours !== 12) hours += 12;
+    if (period === 'AM' && hours === 12) hours = 0;
 
-  // Calculate end time in minutes from midnight for comparison
-  const endTotalMinutes = endHour * 60 + endMinute;
+    const slotStart = new Date(year, month - 1, day, hours, minutes, 0, 0);
+    const slotEnd = new Date(slotStart.getTime() + 30 * 60000);
 
-  for (let hour = startHour; hour <= endHour; hour++) {
-    for (let minute = 0; minute < 60; minute += slotDuration) {
-      const slotTotalMinutes = hour * 60 + minute;
-
-      // Skip if slot starts at or after end time
-      if (slotTotalMinutes >= endTotalMinutes) break;
-
-      // Skip if before working hours start
-      if (hour === startHour && minute < startMinute) continue;
-
-      const slotTime = new Date(targetDate);
-      slotTime.setHours(hour, minute, 0, 0);
-
-      // Skip past times
-      if (slotTime <= new Date()) continue;
-
-      // Check if slot conflicts with existing appointments
-      const hasConflict = existingAppointments.some(appointment => {
-        const appointmentStart = new Date(appointment.dateTime);
-        const appointmentEnd = new Date(appointmentStart.getTime() + (appointment.duration * 60000));
-        const slotEnd = new Date(slotTime.getTime() + (slotDuration * 60000));
-
-        return (slotTime < appointmentEnd && slotEnd > appointmentStart);
-      });
-
-      if (!hasConflict) {
-        availableSlots.push({
-          time: slotTime.toISOString(),
-          displayTime: slotTime.toLocaleTimeString('en-US', { 
-            hour: '2-digit', 
-            minute: '2-digit',
-            hour12: true 
-          })
-        });
-      }
+    // Skip past times
+    if (slotStart <= now) {
+      return { time, available: false, reason: 'past' };
     }
-  }
+
+    // Check if slot conflicts with any existing appointment
+    const isBooked = bookedTimeRanges.some(range => {
+      return slotStart < range.end && slotEnd > range.start;
+    });
+
+    return { time, available: !isBooked, reason: isBooked ? 'booked' : null };
+  });
 
   res.json({
     success: true,

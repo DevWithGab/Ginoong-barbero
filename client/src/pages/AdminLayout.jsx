@@ -81,7 +81,7 @@ const AdminLayout = () => {
               </div>
             }>
               {activeTab === "Dashboard" && (
-                <DashboardHome />
+                <DashboardHome onNavigate={setActiveTab} />
               )}
               
               {activeTab === "Appointments" && (
