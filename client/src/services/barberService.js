@@ -17,14 +17,18 @@ export const barberAPI = {
   },
 
   // Create new barber
-  createBarber: async (barberData) => {
-    const response = await api.post('/barbers', barberData);
+  createBarber: async (formData) => {
+    const response = await api.post('/barbers', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
     return response.data;
   },
 
   // Update barber
-  updateBarber: async (id, barberData) => {
-    const response = await api.put(`/barbers/${id}`, barberData);
+  updateBarber: async (id, formData) => {
+    const response = await api.put(`/barbers/${id}`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
     return response.data;
   },
 

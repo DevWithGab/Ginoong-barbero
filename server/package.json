@@ -27,7 +27,8 @@
     "express-async-handler": "^1.2.0",
     "google-auth-library": "^10.6.2",
     "jsonwebtoken": "^9.0.2",
-    "mongoose": "^7.5.0"
+    "mongoose": "^7.5.0",
+    "multer": "^2.2.0"
   },
   "devDependencies": {
     "nodemon": "^3.0.1"

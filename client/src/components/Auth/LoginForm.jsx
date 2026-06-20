@@ -16,7 +16,7 @@ export const LoginForm = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const from = location.state?.from?.pathname || '/admin';
+  const from = location.state?.from?.pathname || '/admin/dashboard';
 
   const handleGoogleSuccess = async (googleResponse) => {
     setIsLoading(true);

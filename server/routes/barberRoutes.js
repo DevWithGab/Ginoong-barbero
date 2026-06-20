@@ -8,6 +8,7 @@ const {
   getBarberAvailability
 } = require('../controllers/barberController');
 const { protect, staffOnly } = require('../middleware/authMiddleware');
+const { uploadBarberPhoto } = require('../middleware/upload');
 
 const router = express.Router();
 
@@ -19,7 +20,7 @@ router.get('/', getBarbers);
 // @route   POST /api/barbers
 // @desc    Create new barber
 // @access  Private (Staff)
-router.post('/', protect, staffOnly, createBarber);
+router.post('/', protect, staffOnly, uploadBarberPhoto, createBarber);
 
 // @route   GET /api/barbers/:id
 // @desc    Get single barber
@@ -29,7 +30,7 @@ router.get('/:id', getBarber);
 // @route   PUT /api/barbers/:id
 // @desc    Update barber
 // @access  Private (Staff)
-router.put('/:id', protect, staffOnly, updateBarber);
+router.put('/:id', protect, staffOnly, uploadBarberPhoto, updateBarber);
 
 // @route   DELETE /api/barbers/:id
 // @desc    Delete barber

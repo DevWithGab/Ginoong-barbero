@@ -32,7 +32,7 @@ const BUSINESS_INFO = {
 export default function BookingWizard() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user: currentUser, loginWithGoogle, logout } = useAuth();
+  const { user: currentUser, loginWithGoogle, syncUserFromStorage, logout } = useAuth();
   
   // Booking States
   const [step, setStep] = useState(1);
@@ -128,6 +128,27 @@ export default function BookingWizard() {
   const handleConfirm = async () => {
     setIsSubmitting(true);
     setAuthError(null);
+
+    // Frontend validation
+    if (!formData.name.trim()) {
+      setAuthError("Please enter your name.");
+      setIsSubmitting(false);
+      return;
+    }
+    if (!formData.email.trim()) {
+      setAuthError("Please enter your email.");
+      setIsSubmitting(false);
+      return;
+    }
+    if (!formData.phone.trim()) {
+      setAuthError("Please enter your phone number.");
+      setIsSubmitting(false);
+      return;
+    }
+
+    // Strip spaces from phone number
+    const cleanPhone = formData.phone.replace(/\s+/g, '');
+
     try {
       // Parse selectedTime (e.g. "09:00 AM") into hours and minutes
       const [timePart, period] = selectedTime.split(' ');
@@ -139,19 +160,32 @@ export default function BookingWizard() {
       const appointmentDateTime = new Date(selectedDate);
       appointmentDateTime.setHours(hours, minutes, 0, 0);
 
-      const appointmentData = {
-        customerInfo: {
-          name: formData.name,
-          email: formData.email,
-          phone: formData.phone
-        },
-        serviceId: selectedServices[0]?.id || null,
-        barberId: selectedStaff?.id !== "any" ? selectedStaff?.id : null,
-        dateTime: appointmentDateTime.toISOString(),
-        notes: formData.notes
-      };
+      // Check if appointment is in the past
+      if (appointmentDateTime <= new Date()) {
+        setAuthError("Selected time is in the past. Please choose a future time.");
+        setIsSubmitting(false);
+        return;
+      }
 
-      await appointmentAPI.createAppointment(appointmentData);
+      // Create appointments for all selected services
+      const servicesToBook = selectedServices.length > 0 ? selectedServices : [selectedServices[0]];
+      
+      for (const service of servicesToBook) {
+        const appointmentData = {
+          customerInfo: {
+            name: formData.name.trim(),
+            email: formData.email.trim(),
+            phone: cleanPhone
+          },
+          serviceId: getServiceId(service),
+          barberId: selectedStaff?.id !== "any" ? (selectedStaff?._id || selectedStaff?.id) : null,
+          dateTime: appointmentDateTime.toISOString(),
+          notes: formData.notes
+        };
+
+        await appointmentAPI.createAppointment(appointmentData);
+      }
+
       setIsSuccess(true);
       
       // Navigate after success
@@ -166,24 +200,30 @@ export default function BookingWizard() {
     }
   }
 
-  // Auth handlers
+  // Auth handlers - use customer endpoint for booking
   const handleGoogleSignIn = async (googleResponse) => {
     setAuthLoading(true);
     setAuthError(null);
     try {
-      const result = await loginWithGoogle(googleResponse.credential);
+      const result = await authAPI.googleCustomerLogin(googleResponse.credential);
       if (result.data?.token) {
+        // Update auth state with customer data
+        const userData = result.data.user;
+        
         setShowLoginModal(false);
         setStep(step + 1);
+        // Sync auth context with the new user
+        syncUserFromStorage();
         // Update form data with user info
         setFormData(prev => ({
           ...prev,
-          name: result.data.user?.name || prev.name,
-          email: result.data.user?.email || prev.email
+          name: userData.name || prev.name,
+          email: userData.email || prev.email
         }));
       }
     } catch (error) {
-      setAuthError(error.message || 'Google sign-in failed');
+      const msg = error.response?.data?.message || error.response?.data?.error || error.message || 'Google sign-in failed';
+      setAuthError(msg);
     } finally {
       setAuthLoading(false);
     }
@@ -380,6 +420,7 @@ export default function BookingWizard() {
                     onAuthRequired={() => setShowLoginModal(true)}
                     onSignOut={logout}
                     isSubmitting={isSubmitting}
+                    authError={authError}
                   />
                 )}
               </motion.div>

@@ -124,14 +124,15 @@ const getBarber = asyncHandler(async (req, res) => {
 // @route   POST /api/barbers
 // @access  Public
 const createBarber = asyncHandler(async (req, res) => {
-  const { name, role, profileImage, workingHours, workingDays } = req.body;
+  const { name, role, status, workingHours, workingDays } = req.body;
+  const profileImage = req.file ? `/uploads/barbers/${req.file.filename}` : '';
 
   const barber = await Barber.create({
     name,
     role,
-    profileImage: profileImage || '',
-    workingHours: workingHours || { start: '09:00', end: '18:00' },
-    workingDays: workingDays || ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+    profileImage,
+    workingHours: workingHours ? JSON.parse(workingHours) : { start: '09:00', end: '18:00' },
+    workingDays: workingDays ? JSON.parse(workingDays) : ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
   });
 
   res.status(201).json({
@@ -153,13 +154,17 @@ const updateBarber = asyncHandler(async (req, res) => {
     throw new Error('Barber not found');
   }
 
-  // Update fields
   if (name) barber.name = name;
   if (role) barber.role = role;
-  if (profileImage !== undefined) barber.profileImage = profileImage;
   if (status) barber.status = status;
-  if (workingHours) barber.workingHours = workingHours;
-  if (workingDays) barber.workingDays = workingDays;
+  if (workingHours) barber.workingHours = typeof workingHours === 'string' ? JSON.parse(workingHours) : workingHours;
+  if (workingDays) barber.workingDays = typeof workingDays === 'string' ? JSON.parse(workingDays) : workingDays;
+
+  if (req.file) {
+    barber.profileImage = `/uploads/barbers/${req.file.filename}`;
+  } else if (profileImage !== undefined) {
+    barber.profileImage = profileImage;
+  }
 
   const updatedBarber = await barber.save();
 

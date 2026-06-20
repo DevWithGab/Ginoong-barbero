@@ -1,9 +1,25 @@
-import { useNavigate } from "react-router-dom";
+  import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Star } from "lucide-react";
 
+const API_BASE = import.meta.env.VITE_API_BASE_URL?.replace('/api', '') || 'http://localhost:5001';
+
 export function BarberCard({ barber, onClick, index = 0 }) {
   const navigate = useNavigate();
+
+  const getBarberImage = () => {
+    if (barber.profileImage) {
+      return barber.profileImage.startsWith('http')
+        ? barber.profileImage
+        : `${API_BASE}${barber.profileImage}`;
+    }
+    if (barber.photo) {
+      return barber.photo.startsWith('http')
+        ? barber.photo
+        : `${API_BASE}${barber.photo}`;
+    }
+    return `https://api.dicebear.com/7.x/avataaars/svg?seed=${barber.name}`;
+  };
 
   return (
     <motion.div
@@ -22,9 +38,9 @@ export function BarberCard({ barber, onClick, index = 0 }) {
       <div className="relative mb-6 sm:mb-10">
         <div className="aspect-[4/5] overflow-hidden bg-stone-900 border border-white/5 shadow-2xl relative">
           <img
-            src={barber.photo}
+            src={getBarberImage()}
             alt={barber.name}
-            className="w-full h-full object-cover transition-all duration-[2s] grayscale-0 brightness-75 md:grayscale md:brightness-50 md:group-hover:grayscale-0 md:group-hover:brightness-90 md:group-hover:scale-105"
+            className="w-full h-full object-cover transition-all duration-[2s] brightness-75 group-hover:brightness-90 group-hover:scale-105"
             referrerPolicy="no-referrer"
             loading="lazy"
           />

@@ -53,9 +53,11 @@ export function NavActions({
                 <span className="text-white/30 text-[9px] truncate max-w-[120px] font-mono">
                   {user?.email}
                 </span>
-                <span className="text-vintage-tan text-[8px] font-bold uppercase">
-                  {user?.role}
-                </span>
+                {(user?.role === 'admin' || user?.role === 'barber') && (
+                  <span className="text-vintage-tan text-[8px] font-bold uppercase">
+                    {user?.role}
+                  </span>
+                )}
               </div>
             </div>
             <button 
@@ -169,9 +171,11 @@ export function NavActions({
             <span className="text-white/70 max-w-[100px] truncate">
               {user?.name || user?.email}
             </span>
-            <span className="px-2 py-0.5 bg-vintage-tan/20 text-vintage-tan rounded text-[7px] font-bold uppercase">
-              {user?.role}
-            </span>
+            {(user?.role === 'admin' || user?.role === 'barber') && (
+              <span className="px-2 py-0.5 bg-vintage-tan/20 text-vintage-tan rounded text-[7px] font-bold uppercase">
+                {user?.role}
+              </span>
+            )}
           </div>
           <button 
             onClick={onLogout}

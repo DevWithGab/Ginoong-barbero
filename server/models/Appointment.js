@@ -29,18 +29,10 @@ const appointmentSchema = new mongoose.Schema({
   status: {
     type: String,
     enum: {
-      values: ['Pending', 'Confirmed', 'Completed', 'Cancelled'],
-      message: 'Status must be one of: Pending, Confirmed, Completed, Cancelled'
+      values: ['Pending', 'Confirmed', 'Completed', 'Cancelled', 'Rejected'],
+      message: 'Status must be one of: Pending, Confirmed, Completed, Cancelled, Rejected'
     },
     default: 'Pending'
-  },
-  paymentStatus: {
-    type: String,
-    enum: {
-      values: ['Unpaid', 'Paid', 'Refunded'],
-      message: 'Payment status must be one of: Unpaid, Paid, Refunded'
-    },
-    default: 'Unpaid'
   },
   totalAmount: {
     type: Number,

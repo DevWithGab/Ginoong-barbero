@@ -5,6 +5,7 @@ const { OAuth2Client } = require('google-auth-library');
 
 // Note: You may need to adjust the path to your User model
 const User = require('../models/User');
+const Customer = require('../models/Customer');
 
 // Initialize Google OAuth client
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
@@ -23,13 +24,27 @@ const generateToken = (user) => {
 
 // @desc    Register new user (admin creates accounts)
 // @route   POST /api/auth/register
-// @access  Public (first user) or Private (admin only)
+// @access  Private (admin only)
 const registerUser = asyncHandler(async (req, res) => {
   const { name, email, password, role } = req.body;
 
   if (!name || !email || !password) {
     res.status(400);
     throw new Error('Please provide name, email, and password');
+  }
+
+  // Only allow registration of barbers by admin
+  // First user (admin) is created via Google OAuth only
+  const userCount = await User.countDocuments();
+  if (userCount === 0) {
+    res.status(403);
+    throw new Error('Admin account must be created via Google login');
+  }
+
+  // Check if caller is admin
+  if (!req.user || req.user.role !== 'admin') {
+    res.status(403);
+    throw new Error('Only admins can create new accounts');
   }
 
   // Check if user already exists
@@ -43,9 +58,8 @@ const registerUser = asyncHandler(async (req, res) => {
   const salt = await bcrypt.genSalt(10);
   const hashedPassword = await bcrypt.hash(password, salt);
 
-  // Check if this is the first user (make them admin)
-  const userCount = await User.countDocuments();
-  const assignedRole = userCount === 0 ? 'admin' : (role || 'barber');
+  // Admin can only assign barber role
+  const assignedRole = 'barber';
 
   // Create user
   const user = await User.create({
@@ -81,6 +95,12 @@ const loginUser = asyncHandler(async (req, res) => {
   if (!email || !password) {
     res.status(400);
     throw new Error('Please provide email and password');
+  }
+
+  // Only allow admin email to log in
+  if (email !== process.env.ADMIN_EMAIL) {
+    res.status(403);
+    throw new Error('Access denied. This account is not authorized to access the admin panel.');
   }
 
   // Find user and include password field
@@ -163,33 +183,36 @@ const googleLogin = asyncHandler(async (req, res) => {
 
     const { email, name, picture, sub: googleId } = googleUser;
 
+    // Only allow the designated admin email to log in
+    if (email !== process.env.ADMIN_EMAIL) {
+      res.status(403);
+      throw new Error('Access denied. This account is not authorized to access the admin panel.');
+    }
+
     // Check if user exists by googleId or email
     let user = await User.findOne({ $or: [{ googleId }, { email }] });
 
     if (!user) {
-      // Check if email is the designated admin
-      const isAdmin = email === process.env.ADMIN_EMAIL;
-
-      // Create new user
+      // Create new admin user
       user = await User.create({
         name,
         email,
         googleId,
         picture,
-        role: isAdmin ? 'admin' : 'barber',
+        role: 'admin',
         password: require('crypto').randomBytes(32).toString('hex')
       });
     } else {
       // Update googleId and picture if not set
       if (!user.googleId) user.googleId = googleId;
       if (picture) user.picture = picture;
+      
+      // Ensure admin role
+      if (user.role !== 'admin') {
+        user.role = 'admin';
+      }
+      
       await user.save();
-    }
-
-    // Check if user is authorized (admin or barber)
-    if (user.role !== 'admin' && user.role !== 'barber') {
-      res.status(403);
-      throw new Error('Access denied. You are not authorized to access this system.');
     }
 
     // Generate JWT token
@@ -216,6 +239,98 @@ const googleLogin = asyncHandler(async (req, res) => {
     }
     res.status(401);
     throw new Error('Invalid Google token');
+  }
+});
+
+// @desc    Google OAuth login for customers (any account allowed)
+// @route   POST /api/auth/google-customer
+// @access  Public
+const googleCustomerLogin = asyncHandler(async (req, res) => {
+  const { token } = req.body;
+
+  if (!token) {
+    res.status(400);
+    throw new Error('Google token is required');
+  }
+
+  try {
+    let googleUser;
+    
+    const ticket = await client.verifyIdToken({
+      idToken: token,
+      audience: process.env.GOOGLE_CLIENT_ID
+    });
+    googleUser = ticket.getPayload();
+
+    const { email, name, picture, sub: googleId } = googleUser;
+
+    // Find or create customer
+    let user = await User.findOne({ $or: [{ googleId }, { email }] });
+
+    if (user && (user.role === 'admin' || user.role === 'barber')) {
+      res.status(403);
+      throw new Error('This account is registered as staff. Please use the admin login instead.');
+    }
+
+    if (!user) {
+      // Create new customer account
+      user = await User.create({
+        name,
+        email,
+        googleId,
+        picture,
+        role: 'customer',
+        password: require('crypto').randomBytes(32).toString('hex')
+      });
+    } else {
+      // Update googleId and picture if not set
+      if (!user.googleId) user.googleId = googleId;
+      if (picture) user.picture = picture;
+      await user.save();
+    }
+
+    // Also sync to Customer collection so admin dashboard can see them
+    let customer = await Customer.findOne({ email });
+    if (!customer) {
+      customer = await Customer.create({
+        name,
+        email,
+        phone: ''
+      });
+    }
+
+    // Generate JWT token
+    const jwtToken = generateToken(user);
+
+    res.json({
+      success: true,
+      data: {
+        user: {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+          picture: user.picture
+        },
+        token: jwtToken
+      }
+    });
+
+  } catch (error) {
+    console.error('Customer Google login error:', error.message);
+    if (error.statusCode) {
+      throw error;
+    }
+    if (error.message && error.message.includes('Token used too late')) {
+      res.status(401);
+      throw new Error('Google token expired. Please try signing in again.');
+    }
+    if (error.message && error.message.includes('Wrong number of segments')) {
+      res.status(401);
+      throw new Error('Invalid Google token. Please try signing in again.');
+    }
+    res.status(401);
+    throw new Error('Google authentication failed. Please check your Google account and try again.', error.message);
   }
 });
 
@@ -286,6 +401,7 @@ module.exports = {
   registerUser,
   loginUser,
   googleLogin,
+  googleCustomerLogin,
   verifyToken,
   getProfile,
   logoutUser

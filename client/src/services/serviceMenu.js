@@ -17,14 +17,18 @@ export const serviceAPI = {
   },
 
   // Create new service
-  createService: async (serviceData) => {
-    const response = await api.post('/services', serviceData);
+  createService: async (formData) => {
+    const response = await api.post('/services', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
     return response.data;
   },
 
   // Update service
-  updateService: async (id, serviceData) => {
-    const response = await api.put(`/services/${id}`, serviceData);
+  updateService: async (id, formData) => {
+    const response = await api.put(`/services/${id}`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
     return response.data;
   },
 

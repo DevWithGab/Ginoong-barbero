@@ -20,10 +20,11 @@ const customerSchema = new mongoose.Schema({
   },
   phone: {
     type: String,
-    required: [true, 'Phone number is required'],
+    required: false,
     trim: true,
+    default: '',
     match: [
-      /^[\+]?[1-9][\d]{0,15}$/,
+      /^$|^[\+]?[1-9][\d]{0,15}$/,
       'Please enter a valid phone number'
     ]
   },

@@ -8,7 +8,8 @@ export function Step4Confirm({
   onFormChange,
   onAuthRequired,
   onSignOut,
-  isSubmitting
+  isSubmitting,
+  authError
 }) {
   const handleChange = (field, value) => {
     onFormChange({ ...formData, [field]: value });
@@ -44,6 +45,20 @@ export function Step4Confirm({
         </div>
       )}
 
+      {/* Error Alert */}
+      {authError && (
+        <div className="bg-red-500/10 border border-red-500/20 text-red-400 text-[11px] py-3 px-4 rounded-xl font-bold leading-normal">
+          {authError}
+        </div>
+      )}
+
+      {/* Missing phone hint */}
+      {currentUser && !formData.phone && (
+        <div className="bg-vintage-tan/10 border border-vintage-tan/25 text-vintage-tan text-[11px] py-3 px-4 rounded-xl font-bold">
+          Please enter your phone number below to complete the booking.
+        </div>
+      )}
+
       {/* Form Fields */}
       <div className="grid gap-3 sm:gap-5">
         <div className="space-y-1.5">
@@ -67,14 +82,16 @@ export function Step4Confirm({
           />
         </div>
         <div className="space-y-1.5">
-          <label className="text-[8px] sm:text-[9px] font-bold uppercase tracking-[0.4em] text-white/30 ml-1">Phone Number</label>
+          <label className="text-[8px] sm:text-[9px] font-bold uppercase tracking-[0.4em] text-white/30 ml-1">Phone Number *</label>
           <input 
             type="tel" 
-            placeholder="0912 345 6789"
+            placeholder="09123456789"
             value={formData.phone}
-            onChange={(e) => handleChange('phone', e.target.value)}
-            className="w-full bg-vintage-card border border-white/5 rounded-xl sm:rounded-2xl px-4 py-3 sm:px-5 sm:py-3.5 placeholder:text-white/10 focus:border-vintage-tan outline-none transition-all font-bold text-sm" 
+            onChange={(e) => handleChange('phone', e.target.value.replace(/\s+/g, ''))}
+            required
+            className={`w-full bg-vintage-card border rounded-xl sm:rounded-2xl px-4 py-3 sm:px-5 sm:py-3.5 placeholder:text-white/10 focus:border-vintage-tan outline-none transition-all font-bold text-sm ${!formData.phone ? 'border-vintage-tan/50' : 'border-white/5'}`}
           />
+          <p className="text-[8px] text-white/20 ml-1">No spaces allowed</p>
         </div>
         <div className="space-y-1.5">
           <label className="text-[8px] sm:text-[9px] font-bold uppercase tracking-[0.4em] text-white/30 ml-1">Notes</label>

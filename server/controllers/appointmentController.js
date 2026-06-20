@@ -11,7 +11,7 @@ const createAppointment = asyncHandler(async (req, res) => {
   const { customerInfo, serviceId, barberId, dateTime, notes } = req.body;
 
   // Validate required fields
-  if (!customerInfo || !serviceId || !barberId || !dateTime) {
+  if (!customerInfo || !serviceId || !dateTime) {
     res.status(400);
     throw new Error('Please provide all required fields');
   }
@@ -23,55 +23,73 @@ const createAppointment = asyncHandler(async (req, res) => {
     throw new Error('Service not found or inactive');
   }
 
-  // Check if barber exists
-  const barber = await Barber.findById(barberId);
-  if (!barber || barber.status !== 'Active') {
-    res.status(404);
-    throw new Error('Barber not found or inactive');
+  // Check if barber exists (if provided)
+  if (barberId) {
+    const barber = await Barber.findById(barberId);
+    if (!barber || barber.status !== 'Active') {
+      res.status(404);
+      throw new Error('Barber not found or inactive');
+    }
   }
 
-  // Check if the time slot is available
+  // Check if the time slot is available (only if specific barber selected)
   const appointmentDate = new Date(dateTime);
   const endTime = new Date(appointmentDate.getTime() + (service.duration * 60000));
 
-  const conflictingAppointment = await Appointment.findOne({
-    barber: barberId,
-    status: { $in: ['Pending', 'Confirmed'] },
-    dateTime: { $lt: endTime },
-    $expr: {
-      $gt: [
-        { $add: ['$dateTime', { $multiply: ['$duration', 60000] }] },
-        appointmentDate
-      ]
-    }
-  });
+  if (barberId) {
+    const conflictingAppointment = await Appointment.findOne({
+      barber: barberId,
+      status: { $in: ['Pending', 'Confirmed'] },
+      dateTime: { $lt: endTime },
+      $expr: {
+        $gt: [
+          { $add: ['$dateTime', { $multiply: ['$duration', 60000] }] },
+          appointmentDate
+        ]
+      }
+    });
 
-  if (conflictingAppointment) {
-    res.status(400);
-    throw new Error('Time slot is not available');
+    if (conflictingAppointment) {
+      res.status(400);
+      throw new Error('Time slot is not available');
+    }
   }
 
   // Find or create customer
-  let customer = await Customer.findOne({
-    $or: [
-      { email: customerInfo.email },
-      { phone: customerInfo.phone }
-    ]
-  });
+  let customer;
+  
+  // Try to find by email first, then by phone (if phone is provided)
+  if (customerInfo.email) {
+    customer = await Customer.findOne({ email: customerInfo.email });
+  }
+  if (!customer && customerInfo.phone) {
+    customer = await Customer.findOne({ phone: customerInfo.phone });
+  }
 
   if (!customer) {
     customer = await Customer.create({
       name: customerInfo.name,
       email: customerInfo.email,
-      phone: customerInfo.phone
+      phone: customerInfo.phone || ''
     });
+  } else {
+    // Update phone if it was empty and now provided
+    if (!customer.phone && customerInfo.phone) {
+      customer.phone = customerInfo.phone;
+      await customer.save();
+    }
+    // Update name if empty
+    if (!customer.name && customerInfo.name) {
+      customer.name = customerInfo.name;
+      await customer.save();
+    }
   }
 
   // Create appointment
   const appointment = await Appointment.create({
     customer: customer._id,
     service: serviceId,
-    barber: barberId,
+    barber: barberId || null,
     dateTime: appointmentDate,
     totalAmount: service.price,
     duration: service.duration,

@@ -124,7 +124,8 @@ const getService = asyncHandler(async (req, res) => {
 // @route   POST /api/services
 // @access  Public
 const createService = asyncHandler(async (req, res) => {
-  const { name, description, category, duration, price, status, image } = req.body;
+  const { name, description, category, duration, price, status } = req.body;
+  const image = req.file ? `/uploads/services/${req.file.filename}` : null;
 
   // Check if service with same name already exists
   const existingService = await Service.findOne({ name });
@@ -137,8 +138,8 @@ const createService = asyncHandler(async (req, res) => {
     name,
     description,
     category,
-    duration,
-    price,
+    duration: Number(duration),
+    price: Number(price),
     status: status || 'Active',
     image
   });
@@ -153,7 +154,7 @@ const createService = asyncHandler(async (req, res) => {
 // @route   PUT /api/services/:id
 // @access  Public
 const updateService = asyncHandler(async (req, res) => {
-  const { name, description, category, duration, price, status, image } = req.body;
+  const { name, description, category, duration, price, status } = req.body;
 
   const service = await Service.findById(req.params.id);
 
@@ -175,10 +176,13 @@ const updateService = asyncHandler(async (req, res) => {
   if (name) service.name = name;
   if (description) service.description = description;
   if (category) service.category = category;
-  if (duration) service.duration = duration;
-  if (price !== undefined) service.price = price;
+  if (duration) service.duration = Number(duration);
+  if (price !== undefined) service.price = Number(price);
   if (status) service.status = status;
-  if (image !== undefined) service.image = image;
+
+  if (req.file) {
+    service.image = `/uploads/services/${req.file.filename}`;
+  }
 
   const updatedService = await service.save();
 

@@ -67,7 +67,6 @@ export function LoginModal({
                     onError={() => {
                       console.error('Google login error');
                     }}
-                    useOneTap
                     theme="outline"
                     size="large"
                     width="100%"

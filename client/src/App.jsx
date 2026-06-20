@@ -66,7 +66,7 @@ function App() {
               <Route 
                 path="/admin/login" 
                 element={
-                  <PublicRoute>
+                  <PublicRoute restrictWhenAuthenticated={true} redirectTo="/admin/dashboard">
                     <LoginForm />
                   </PublicRoute>
                 } 

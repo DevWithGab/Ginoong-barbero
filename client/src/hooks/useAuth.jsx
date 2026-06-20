@@ -27,13 +27,17 @@ export const AuthProvider = ({ children }) => {
     const initializeAuth = async () => {
       try {
         if (authUtils.isAuthenticated()) {
-          // Verify token is still valid
-          await authAPI.verifyToken();
           const currentUser = authUtils.getCurrentUser();
           setUser(currentUser);
+          // Verify token in background (non-blocking)
+          authAPI.verifyToken().catch(() => {
+            // Token invalid - clear auth silently
+            authUtils.clearAuth();
+            setUser(null);
+          });
         }
       } catch (error) {
-        console.error('Token verification failed:', error);
+        console.error('Auth initialization failed:', error);
         authUtils.clearAuth();
         setUser(null);
       } finally {
@@ -63,6 +67,12 @@ export const AuthProvider = ({ children }) => {
     }
   }, []);
 
+  // Sync user from localStorage (for customer Google login)
+  const syncUserFromStorage = useCallback(() => {
+    const currentUser = authUtils.getCurrentUser();
+    setUser(currentUser);
+  }, []);
+
   // Logout function
   const logout = useCallback(async () => {
     setLoading(true);
@@ -82,6 +92,7 @@ export const AuthProvider = ({ children }) => {
     loading,
     error,
     loginWithGoogle,
+    syncUserFromStorage,
     logout,
     isAuthenticated: !!user,
     isAdmin: user?.role === 'admin',

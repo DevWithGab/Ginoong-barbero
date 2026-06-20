@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5001/api';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -8,6 +8,9 @@ const api = axios.create({
     'Content-Type': 'application/json',
   },
 });
+
+// Track whether we're on an admin page
+const isAdminPage = () => window.location.pathname.startsWith('/admin');
 
 // Add token to requests if it exists
 api.interceptors.request.use((config) => {
@@ -23,13 +26,12 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      // Clear invalid token
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      localStorage.removeItem('userRole');
-      
-      // Only redirect to login if not already on login page
-      if (!window.location.pathname.includes('/login')) {
+      // Only clear auth and redirect on admin pages
+      // Customer-facing pages handle 401 errors locally
+      if (isAdminPage()) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        localStorage.removeItem('userRole');
         window.location.href = '/admin/login';
       }
     }

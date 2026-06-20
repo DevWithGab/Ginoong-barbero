@@ -4,7 +4,7 @@ import api from './api';
 // GOOGLE OAUTH AUTHENTICATION SERVICE
 // ============================================
 export const authAPI = {
-  // Google OAuth login
+  // Google OAuth login (admin only)
   googleLogin: async (googleToken) => {
     const response = await api.post('/auth/google', { token: googleToken });
     
@@ -14,6 +14,25 @@ export const authAPI = {
       localStorage.setItem('token', token);
       localStorage.setItem('user', JSON.stringify(user));
       localStorage.setItem('userRole', user.role || 'barber');
+      
+      api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+      
+      return response.data;
+    }
+    
+    throw new Error(response.data.message || 'Login failed');
+  },
+
+  // Google OAuth login for customers (any account)
+  googleCustomerLogin: async (googleToken) => {
+    const response = await api.post('/auth/google-customer', { token: googleToken });
+    
+    if (response.data.success) {
+      const { token, user } = response.data.data;
+      
+      localStorage.setItem('token', token);
+      localStorage.setItem('user', JSON.stringify(user));
+      localStorage.setItem('userRole', user.role || 'customer');
       
       api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
       

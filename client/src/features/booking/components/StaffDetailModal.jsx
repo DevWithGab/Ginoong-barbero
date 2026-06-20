@@ -1,12 +1,28 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Share2 } from 'lucide-react';
 
+const API_BASE = import.meta.env.VITE_API_BASE_URL?.replace('/api', '') || 'http://localhost:5001';
+
 export function StaffDetailModal({
   staff,
   isOpen,
   onClose
 }) {
   if (!staff || !isOpen) return null;
+
+  const getStaffImage = () => {
+    if (staff.profileImage) {
+      return staff.profileImage.startsWith('http')
+        ? staff.profileImage
+        : `${API_BASE}${staff.profileImage}`;
+    }
+    if (staff.photo) {
+      return staff.photo.startsWith('http')
+        ? staff.photo
+        : `${API_BASE}${staff.photo}`;
+    }
+    return `https://api.dicebear.com/7.x/avataaars/svg?seed=${staff.name}`;
+  };
 
   return (
     <AnimatePresence>
@@ -44,7 +60,7 @@ export function StaffDetailModal({
                 <div className="relative mb-6 sm:mb-8 pt-4 group">
                   <div className="absolute -inset-3 border border-vintage-tan/20 rounded-full scale-105 group-hover:scale-102 transition-transform duration-700"></div>
                   <img 
-                    src={staff.photo} 
+                    src={getStaffImage()} 
                     className="w-32 h-32 sm:w-44 sm:h-44 rounded-full object-cover shadow-[0_30px_60px_-15px_rgba(0,0,0,0.6)] border-4 border-vintage-card" 
                     alt={staff.name} 
                     referrerPolicy="no-referrer"

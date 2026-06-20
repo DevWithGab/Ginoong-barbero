@@ -18,7 +18,7 @@ export function LandingNavbar({ onBookNow }) {
   const { user, logout, isAuthenticated, isAdmin, isBarber } = useAuth();
 
   const { data: pendingAppointments } = useAppointments(
-    isAuthenticated ? { status: 'Pending', limit: 5 } : null
+    isAuthenticated && (isAdmin || isBarber) ? { status: 'Pending', limit: 5 } : null
   );
 
   const pendingCount = pendingAppointments?.data?.length || 0;

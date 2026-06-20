@@ -1,6 +1,14 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Clock } from 'lucide-react';
 
+const API_BASE = import.meta.env.VITE_API_BASE_URL?.replace('/api', '') || 'http://localhost:5001';
+
+const getImageUrl = (image) => {
+  if (!image) return null;
+  if (image.startsWith('http')) return image;
+  return `${API_BASE}${image}`;
+};
+
 export function ServiceDetailModal({
   service,
   isOpen,
@@ -37,7 +45,7 @@ export function ServiceDetailModal({
             <div className="space-y-6 sm:space-y-10">
               {service.image && (
                 <div className="relative aspect-[16/9] w-full bg-stone-900 rounded-xl overflow-hidden">
-                  <img src={service.image} alt={service.name} className="w-full h-full object-cover" />
+                  <img src={getImageUrl(service.image)} alt={service.name} className="w-full h-full object-cover" />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
                 </div>
               )}

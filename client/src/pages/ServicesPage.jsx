@@ -17,6 +17,14 @@ import { serviceAPI } from "../services/serviceMenu";
 import { Footer } from "../components/Layout/Footer";
 import { LandingNavbar } from "../features/landing/components/navbar/LandingNavbar";
 
+const API_BASE = import.meta.env.VITE_API_BASE_URL?.replace('/api', '') || 'http://localhost:5001';
+
+const getImageUrl = (image) => {
+  if (!image) return null;
+  if (image.startsWith('http')) return image;
+  return `${API_BASE}${image}`;
+};
+
 const CATEGORY_DETAILS = [
   { id: "All", name: "All Services", subtitle: "Complete Sanctum", description: "Our entire range of tailored grooming treatments.", icon: Compass },
   { id: "Haircuts", name: "Haircuts", subtitle: "Sartorial Cuts", description: "Precision shear-work & clean custom clipper fades.", icon: Scissors },
@@ -325,9 +333,9 @@ export default function ServicesPage() {
                       {activeSpotlightService.image && (
                         <div className="relative aspect-[16/10] w-full bg-stone-900 rounded-xl overflow-hidden shadow-inner border border-white/5 group">
                           <img
-                            src={activeSpotlightService.image}
+                            src={getImageUrl(activeSpotlightService.image)}
                             alt={activeSpotlightService.name}
-                            className="w-full h-full object-cover grayscale brightness-[0.7] group-hover:scale-105 group-hover:grayscale-0 group-hover:brightness-95 transition-all duration-1000"
+                            className="w-full h-full object-cover brightness-[0.7] group-hover:scale-105 group-hover:brightness-95 transition-all duration-1000"
                             referrerPolicy="no-referrer"
                           />
                           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-85" />
@@ -450,7 +458,7 @@ export default function ServicesPage() {
                           )}
                           {activeSpotlightService?.image && isActive && (
                             <div className="relative aspect-[16/9] w-full bg-stone-900 rounded-lg overflow-hidden">
-                              <img src={activeSpotlightService.image} alt={activeSpotlightService.name} className="w-full h-full object-cover grayscale brightness-[0.7]" referrerPolicy="no-referrer" />
+                              <img src={getImageUrl(activeSpotlightService.image)} alt={activeSpotlightService.name} className="w-full h-full object-cover brightness-[0.7]" referrerPolicy="no-referrer" />
                               <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                             </div>
                           )}

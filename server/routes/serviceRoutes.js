@@ -10,6 +10,7 @@ const {
   getPopularServices
 } = require('../controllers/serviceController');
 const { protect, staffOnly } = require('../middleware/authMiddleware');
+const { uploadServicePhoto } = require('../middleware/upload');
 
 const router = express.Router();
 
@@ -36,7 +37,7 @@ router.get('/', getServices);
 // @route   POST /api/services
 // @desc    Create new service
 // @access  Private (Staff)
-router.post('/', protect, staffOnly, createService);
+router.post('/', protect, staffOnly, uploadServicePhoto, createService);
 
 // @route   GET /api/services/:id
 // @desc    Get single service
@@ -46,7 +47,7 @@ router.get('/:id', getService);
 // @route   PUT /api/services/:id
 // @desc    Update service
 // @access  Private (Staff)
-router.put('/:id', protect, staffOnly, updateService);
+router.put('/:id', protect, staffOnly, uploadServicePhoto, updateService);
 
 // @route   DELETE /api/services/:id
 // @desc    Delete service

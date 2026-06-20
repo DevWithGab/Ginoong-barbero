@@ -1,113 +1,108 @@
-import { useState, useEffect } from 'react';
-import { useNavigate, Outlet, Link, useLocation } from 'react-router-dom';
-import { useAuth } from '../hooks/useAuth';
-import { LogOut, Menu, X } from 'lucide-react';
+import { useState, Suspense, lazy } from "react";
+import { 
+  LayoutDashboard,
+  ClipboardList,
+  Scissors,
+  UserCircle
+} from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../hooks/useAuth";
 
-export default function AdminLayout() {
+// Extracted UI Components
+import { AdminSidebar } from "../features/admin/components/AdminSidebar";
+import { AdminMobileMenu } from "../features/admin/components/AdminMobileMenu";
+import { AdminAuthScreens } from "../components/Auth/AdminAuthScreen";
+
+// Lazy Loaded Tab Components
+const DashboardHome = lazy(() => import('../features/admin/views/DashboardHome').then(m => ({ default: m.DashboardHome })));
+const AppointmentsTab = lazy(() => import('../features/admin/views/AppointmentsTab').then(m => ({ default: m.AppointmentsTab })));
+const ServicesTab = lazy(() => import('../features/admin/views/ServicesTab').then(m => ({ default: m.ServicesTab })));
+const BarbersTab = lazy(() => import('../features/admin/views/BarbersTab').then(m => ({ default: m.BarbersTab })));
+
+const AdminLayout = () => {
+  const [activeTab, setActiveTab] = useState("Dashboard");
+  const [filter, setFilter] = useState("all");
+  const [sidebarExpanded, setSidebarExpanded] = useState(true);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
-  const location = useLocation();
-  const { user, logout, isAdmin, isBarber } = useAuth();
-  const [sidebarOpen, setSidebarOpen] = useState(true);
 
-  // Redirect if not authenticated or not admin/barber
-  useEffect(() => {
-    if (!user) {
-      navigate('/admin/login');
-    }
-  }, [user, navigate]);
+  const { user, isAdmin, loading, logout } = useAuth();
 
-  if (!user || (!isAdmin && !isBarber)) {
-    return null;
-  }
+  const handleLogout = async () => {
+    await logout();
+    navigate("/");
+  };
 
-  const NavLink = ({ to, emoji, children }) => (
-    <Link
-      to={to}
-      className={`flex items-center gap-3 px-3 py-2 rounded hover:bg-gray-800 transition-colors ${
-        location.pathname === to ? 'text-vintage-tan bg-gray-800' : 'text-gray-300 hover:text-vintage-tan'
-      }`}
-    >
-      <span className="text-xl">{emoji}</span>
-      {sidebarOpen && <span>{children}</span>}
-    </Link>
+  const menuItems = [
+    { label: 'Dashboard', icon: LayoutDashboard },
+    { label: 'Appointments', icon: ClipboardList },
+    { label: 'Services', icon: Scissors },
+    { label: 'Barbers', icon: UserCircle },
+  ];
+
+  if (loading) return (
+    <div className="min-h-screen bg-[#fbfcfa] flex items-center justify-center">
+      <div className="w-12 h-12 border-4 border-vintage-tan border-t-transparent rounded-full animate-spin"></div>
+    </div>
   );
 
+  if (!user || isAdmin === false) {
+    return <AdminAuthScreens />;
+  }
+
   return (
-    <div className="flex h-screen bg-black text-white">
-      {/* Sidebar */}
-      <aside
-        className={`${
-          sidebarOpen ? 'w-64' : 'w-20'
-        } bg-gradient-to-b from-gray-900 to-black border-r border-vintage-tan/20 transition-all duration-300 ease-in-out`}
-      >
-        {/* Header */}
-        <div className="p-4 border-b border-vintage-tan/20 flex items-center justify-between">
-          {sidebarOpen && <h2 className="font-bold text-vintage-tan">Admin</h2>}
-          <button
-            onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="text-vintage-tan hover:bg-gray-800 p-2 rounded transition-colors"
-          >
-            {sidebarOpen ? <X size={20} /> : <Menu size={20} />}
-          </button>
-        </div>
+    <div className="flex flex-col lg:flex-row h-screen bg-[#fbfcfa] text-[#18181b] font-sans overflow-hidden selection:bg-vintage-tan/20 w-full" id="admin-dashboard-root">
+      <AdminMobileMenu 
+        mobileMenuOpen={mobileMenuOpen}
+        setMobileMenuOpen={setMobileMenuOpen}
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        user={user}
+        handleLogout={handleLogout}
+        menuItems={menuItems}
+      />
 
-        {/* Navigation */}
-        <nav className="flex-1 p-4 space-y-2">
-          {isAdmin && (
-            <>
-              <NavLink to="/admin/dashboard" emoji="📊">Dashboard</NavLink>
-              <NavLink to="/admin/appointments" emoji="📅">Appointments</NavLink>
-              <NavLink to="/admin/services" emoji="✂️">Services</NavLink>
-              <NavLink to="/admin/barbers" emoji="💇">Barbers</NavLink>
-            </>
-          )}
-          
-          {isBarber && (
-            <>
-              <NavLink to="/barber/schedule" emoji="📅">My Schedule</NavLink>
-              <NavLink to="/barber/appointments" emoji="✂️">Appointments</NavLink>
-            </>
-          )}
-        </nav>
+      <AdminSidebar 
+        sidebarExpanded={sidebarExpanded}
+        setSidebarExpanded={setSidebarExpanded}
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        user={user}
+        handleLogout={handleLogout}
+        menuItems={menuItems}
+      />
 
-        {/* Logout */}
-        <div className="p-4 border-t border-vintage-tan/20">
-          <button
-            onClick={() => {
-              logout();
-              navigate('/');
-            }}
-            className="flex items-center gap-3 w-full px-3 py-2 rounded hover:bg-red-500/20 transition-colors text-red-400 hover:text-red-300"
-          >
-            <LogOut size={20} />
-            {sidebarOpen && <span>Logout</span>}
-          </button>
-        </div>
-      </aside>
+      {/* Main Content Area */}
+      <main className="flex-1 flex flex-col overflow-hidden relative w-full">
+         <div data-lenis-prevent className="flex-1 overflow-y-auto p-4 sm:p-6 md:p-12 bg-[#fbfcfa] w-full relative">
+            <Suspense fallback={
+              <div className="absolute inset-0 flex items-center justify-center bg-[#fbfcfa]">
+                <div className="w-8 h-8 border-4 border-vintage-tan border-t-transparent rounded-full animate-spin"></div>
+              </div>
+            }>
+              {activeTab === "Dashboard" && (
+                <DashboardHome />
+              )}
+              
+              {activeTab === "Appointments" && (
+                <AppointmentsTab 
+                  filter={filter}
+                  setFilter={setFilter}
+                />
+              )}
 
-      {/* Main Content */}
-      <main className="flex-1 overflow-auto">
-        {/* Top Bar */}
-        <div className="bg-gray-900 border-b border-vintage-tan/20 p-6 flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-white">
-            {isAdmin ? 'Admin Dashboard' : 'Barber Dashboard'}
-          </h1>
-          <div className="flex items-center gap-4">
-            <div className="text-right">
-              <p className="text-sm text-gray-400">Logged in as</p>
-              <p className="font-semibold text-white">{user?.name || user?.email}</p>
-            </div>
-            <div className="w-10 h-10 rounded-full bg-vintage-tan text-black flex items-center justify-center font-bold text-sm">
-              {user?.name ? user.name[0].toUpperCase() : 'U'}
-            </div>
-          </div>
-        </div>
+              {activeTab === "Services" && (
+                <ServicesTab />
+              )}
 
-        {/* Page Content */}
-        <div className="p-6">
-          <Outlet />
-        </div>
+              {activeTab === "Barbers" && (
+                <BarbersTab />
+              )}
+            </Suspense>
+         </div>
       </main>
     </div>
   );
-}
+};
+
+export default AdminLayout;
