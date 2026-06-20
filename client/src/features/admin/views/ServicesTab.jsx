@@ -43,6 +43,8 @@ export const ServicesTab = () => {
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState('');
+  const [servicePage, setServicePage] = useState(1);
+  const SERVICES_PER_PAGE = 5;
   const modalRef = useRef(null);
   const firstInputRef = useRef(null);
   const [formData, setFormData] = useState({
@@ -86,6 +88,9 @@ export const ServicesTab = () => {
   const filteredServices = activeSubTab === "ALL SERVICES" 
     ? services 
     : services.filter(s => s.category === activeSubTab);
+
+  const serviceTotalPages = Math.ceil(filteredServices.length / SERVICES_PER_PAGE);
+  const paginatedServices = filteredServices.slice((servicePage - 1) * SERVICES_PER_PAGE, servicePage * SERVICES_PER_PAGE);
 
   const dummyChartData = [
     { v: 10 }, { v: 15 }, { v: 12 }, { v: 18 }, { v: 14 }, { v: 22 }, { v: 16 }
@@ -252,7 +257,7 @@ export const ServicesTab = () => {
                 {tabs.map(t => (
                   <button 
                     key={t}
-                    onClick={() => setActiveSubTab(t)}
+                    onClick={() => { setActiveSubTab(t); setServicePage(1); }}
                     role="tab"
                     aria-selected={activeSubTab === t}
                     className={`text-[10px] font-black uppercase tracking-widest relative pb-6 -mb-6 transition-colors ${activeSubTab === t ? 'text-vintage-tan after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-vintage-tan' : 'text-[#a1a1aa] hover:text-[#18181b]'}`}
@@ -288,7 +293,7 @@ export const ServicesTab = () => {
               </div>
             ) : (
               <div className="divide-y divide-[#efefef]">
-                {filteredServices.map((s) => (
+                {paginatedServices.map((s) => (
                   <div 
                     key={s._id} 
                     onClick={() => handleViewDetails(s)}
@@ -354,7 +359,39 @@ export const ServicesTab = () => {
 
            {/* Pagination Footer */}
            <div className="px-10 py-6 border-t border-[#efefef] flex items-center justify-between text-[11px] font-medium text-[#a1a1aa]">
-              <p>Showing 1 to {filteredServices.length} of {services.length} services</p>
+              <p>Showing {(servicePage - 1) * SERVICES_PER_PAGE + 1} to {Math.min(servicePage * SERVICES_PER_PAGE, filteredServices.length)} of {filteredServices.length} services</p>
+              <div className="flex items-center gap-2" role="navigation" aria-label="Service pagination">
+                 <button 
+                   onClick={() => servicePage > 1 && setServicePage(servicePage - 1)}
+                   disabled={servicePage <= 1}
+                   className="w-8 h-8 flex items-center justify-center border border-[#efefef] rounded hover:border-[#a1a1aa] transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                   aria-label="Previous page"
+                 >
+                   <ChevronLeft size={16}/>
+                 </button>
+                 {Array.from({ length: Math.min(serviceTotalPages, 4) }, (_, i) => i + 1).map(p => (
+                   <button 
+                     key={p}
+                     onClick={() => setServicePage(p)}
+                     aria-current={servicePage === p ? 'page' : undefined}
+                     className={`w-8 h-8 flex items-center justify-center font-bold rounded transition-colors ${
+                       servicePage === p 
+                         ? 'bg-vintage-tan text-white' 
+                         : 'border border-[#efefef] hover:border-[#a1a1aa]'
+                     }`}
+                   >
+                     {p}
+                   </button>
+                 ))}
+                 <button 
+                   onClick={() => servicePage < serviceTotalPages && setServicePage(servicePage + 1)}
+                   disabled={servicePage >= serviceTotalPages}
+                   className="w-8 h-8 flex items-center justify-center border border-[#efefef] rounded hover:border-[#a1a1aa] transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                   aria-label="Next page"
+                 >
+                   <ChevronRight size={16}/>
+                 </button>
+              </div>
            </div>
         </div>
       </div>
@@ -413,7 +450,7 @@ export const ServicesTab = () => {
               {categoryList.map(cat => (
                 <button 
                   key={cat.name} 
-                  onClick={() => setActiveSubTab(cat.name.toUpperCase())}
+                  onClick={() => { setActiveSubTab(cat.name.toUpperCase()); setServicePage(1); }}
                   className="w-full flex items-center justify-between p-3 rounded hover:bg-neutral-50 transition-colors group text-left"
                 >
                    <div className="flex items-center gap-4">
