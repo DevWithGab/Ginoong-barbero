@@ -194,6 +194,9 @@ export default function BookingWizard() {
 
       setIsSuccess(true);
       
+      // Logout after booking confirmed
+      await logout();
+
       // Navigate after success
       setTimeout(() => {
         navigate('/');

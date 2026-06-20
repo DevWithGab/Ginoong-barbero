@@ -90,10 +90,6 @@ export function Step2Professionals({
                   <span className="text-[8px] sm:text-[9px] text-vintage-tan tracking-[0.2em] uppercase font-black">
                     {member.role}
                   </span>
-                  <span className="text-white/20 text-xs font-mono select-none">·</span>
-                  <span className="text-[10px] text-white/40 font-bold font-mono">
-                    ★ 4.9 ({member.appointmentsCompleted || 0}+ cuts)
-                  </span>
                 </div>
 
                 <p className="text-[11px] sm:text-xs text-white/45 font-slab italic leading-relaxed line-clamp-2 max-w-lg mb-2">
