@@ -13,7 +13,7 @@ export const authAPI = {
       
       localStorage.setItem('token', token);
       localStorage.setItem('user', JSON.stringify(user));
-      localStorage.setItem('userRole', user.role || 'barber');
+      localStorage.setItem('userRole', user.role || 'customer');
       
       api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
       
@@ -116,11 +116,6 @@ export const authUtils = {
   // Check if user is admin
   isAdmin: () => {
     return authUtils.hasRole('admin');
-  },
-
-  // Check if user is barber
-  isBarber: () => {
-    return authUtils.hasRole('barber');
   },
 
   // Get auth token

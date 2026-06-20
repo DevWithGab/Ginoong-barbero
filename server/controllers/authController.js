@@ -33,8 +33,7 @@ const registerUser = asyncHandler(async (req, res) => {
     throw new Error('Please provide name, email, and password');
   }
 
-  // Only allow registration of barbers by admin
-  // First user (admin) is created via Google OAuth only
+  // Only allow registration by admin
   const userCount = await User.countDocuments();
   if (userCount === 0) {
     res.status(403);
@@ -58,15 +57,12 @@ const registerUser = asyncHandler(async (req, res) => {
   const salt = await bcrypt.genSalt(10);
   const hashedPassword = await bcrypt.hash(password, salt);
 
-  // Admin can only assign barber role
-  const assignedRole = 'barber';
-
   // Create user
   const user = await User.create({
     name,
     email,
     password: hashedPassword,
-    role: assignedRole
+    role: 'customer'
   });
 
   // Generate token
@@ -267,9 +263,11 @@ const googleCustomerLogin = asyncHandler(async (req, res) => {
     // Find or create customer
     let user = await User.findOne({ $or: [{ googleId }, { email }] });
 
-    if (user && (user.role === 'admin' || user.role === 'barber')) {
-      res.status(403);
-      throw new Error('This account is registered as staff. Please use the admin login instead.');
+    if (user && user.role === 'admin') {
+      return res.status(403).json({
+        success: false,
+        message: 'This account is registered as admin. Please use the admin login instead.'
+      });
     }
 
     if (!user) {
@@ -295,8 +293,12 @@ const googleCustomerLogin = asyncHandler(async (req, res) => {
       customer = await Customer.create({
         name,
         email,
-        phone: ''
+        phone: '',
+        picture: picture || ''
       });
+    } else if (picture && !customer.picture) {
+      customer.picture = picture;
+      await customer.save();
     }
 
     // Generate JWT token
@@ -318,19 +320,20 @@ const googleCustomerLogin = asyncHandler(async (req, res) => {
 
   } catch (error) {
     console.error('Customer Google login error:', error.message);
-    if (error.statusCode) {
-      throw error;
-    }
     if (error.message && error.message.includes('Token used too late')) {
-      res.status(401);
-      throw new Error('Google token expired. Please try signing in again.');
+      return res.status(401).json({
+        success: false,
+        message: 'Google token expired. Please try signing in again.'
+      });
     }
     if (error.message && error.message.includes('Wrong number of segments')) {
-      res.status(401);
-      throw new Error('Invalid Google token. Please try signing in again.');
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid Google token. Please try signing in again.'
+      });
     }
     res.status(401);
-    throw new Error('Google authentication failed. Please check your Google account and try again.', error.message);
+    throw new Error('Google authentication failed. Please check your Google account and try again.');
   }
 });
 

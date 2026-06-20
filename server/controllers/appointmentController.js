@@ -98,7 +98,7 @@ const createAppointment = asyncHandler(async (req, res) => {
 
   // Populate the appointment with related data
   const populatedAppointment = await Appointment.findById(appointment._id)
-    .populate('customer', 'name email phone')
+    .populate('customer', 'name email phone picture')
     .populate('service', 'name duration price category')
     .populate('barber', 'name role');
 
@@ -148,7 +148,7 @@ const getAppointments = asyncHandler(async (req, res) => {
 
   // Get appointments with population
   const appointments = await Appointment.find(filter)
-    .populate('customer', 'name email phone isVIP')
+    .populate('customer', 'name email phone isVIP picture')
     .populate('service', 'name duration price category')
     .populate('barber', 'name role profileImage')
     .sort(sortOptions)
@@ -295,7 +295,7 @@ const updateAppointment = asyncHandler(async (req, res) => {
 
   // Populate the updated appointment
   const populatedAppointment = await Appointment.findById(updatedAppointment._id)
-    .populate('customer', 'name email phone isVIP')
+    .populate('customer', 'name email phone isVIP picture')
     .populate('service', 'name duration price category')
     .populate('barber', 'name role profileImage');
 
@@ -310,7 +310,7 @@ const updateAppointment = asyncHandler(async (req, res) => {
 // @access  Public
 const getAppointment = asyncHandler(async (req, res) => {
   const appointment = await Appointment.findById(req.params.id)
-    .populate('customer', 'name email phone isVIP totalVisits')
+    .populate('customer', 'name email phone isVIP totalVisits picture')
     .populate('service', 'name duration price category description')
     .populate('barber', 'name role profileImage');
 

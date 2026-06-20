@@ -96,7 +96,7 @@ export const AuthProvider = ({ children }) => {
     logout,
     isAuthenticated: !!user,
     isAdmin: user?.role === 'admin',
-    isBarber: user?.role === 'barber',
+    isBarber: false,
     hasRole: (role) => user?.role === role
   };
 
@@ -159,7 +159,7 @@ export const useAdminAccess = () => {
 export const useBarberAccess = () => {
   const { user } = useAuth();
   
-  const hasAccess = user?.role === 'barber' || user?.role === 'admin';
+  const hasAccess = user?.role === 'admin';
   const isLoading = !user && authUtils.isAuthenticated();
   
   return { hasAccess, isLoading };

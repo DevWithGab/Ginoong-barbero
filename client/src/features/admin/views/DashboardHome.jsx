@@ -164,7 +164,7 @@ export const DashboardHome = () => {
                       </div>
 
                       <div className="flex items-center gap-3 ml-16 xs:ml-20 sm:ml-24 flex-1 min-w-0">
-                         <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${item.customer?.name}`} className="w-8 h-8 sm:w-10 sm:h-10 rounded-full border border-[#1a1a1a] bg-[#111] shrink-0" alt="" />
+                          <img src={item.customer?.picture || `https://api.dicebear.com/7.x/avataaars/svg?seed=${item.customer?.name}`} className="w-8 h-8 sm:w-10 sm:h-10 rounded-full border border-[#1a1a1a] bg-[#111] shrink-0" alt="" />
                          <div className="min-w-0">
                             <p className="text-xs sm:text-[13px] font-bold text-white group-hover:text-vintage-tan transition-colors truncate">{item.customer?.name}</p>
                             <p className="text-[9px] sm:text-[10px] font-medium text-[#444] truncate">{item.service?.name}</p>

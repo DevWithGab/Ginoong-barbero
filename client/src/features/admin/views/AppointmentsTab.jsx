@@ -308,7 +308,7 @@ export const AppointmentsTab = ({
                       {/* Customer */}
                       <div className="flex items-center gap-4 flex-1 min-w-0">
                         <div className="w-12 h-12 rounded-full overflow-hidden bg-[#f4f4f5] border border-[#efefef] shrink-0">
-                          <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${b.customer?.name}`} alt="" aria-hidden="true" />
+                          <img src={b.customer?.picture || `https://api.dicebear.com/7.x/avataaars/svg?seed=${b.customer?.name}`} alt="" aria-hidden="true" />
                         </div>
                         <div className="min-w-0">
                           <p className="text-[14px] font-bold text-[#18181b] truncate group-hover:text-vintage-tan transition-colors">{b.customer?.name}</p>
@@ -519,7 +519,7 @@ export const AppointmentsTab = ({
                   <div className="bg-[#fbfcfa] border border-[#efefef] rounded-lg p-5 space-y-4">
                     <div className="flex items-center gap-4">
                       <div className="w-14 h-14 rounded-full overflow-hidden bg-[#f4f4f5] border border-[#efefef]">
-                        <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${selectedAppointment.customer?.name}`} alt="" />
+                        <img src={selectedAppointment.customer?.picture || `https://api.dicebear.com/7.x/avataaars/svg?seed=${selectedAppointment.customer?.name}`} alt="" />
                       </div>
                       <div>
                         <p className="text-[15px] font-bold text-[#18181b]">{selectedAppointment.customer?.name}</p>

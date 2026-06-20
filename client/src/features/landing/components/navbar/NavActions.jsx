@@ -19,8 +19,7 @@ const FacebookIcon = ({ size = 14, ...props }) => (
 export function NavActions({ 
   isAuthenticated, 
   user, 
-  isAdmin, 
-  isBarber,
+  isAdmin,
   pendingCount = 0,
   todayAppointments = 0,
   onBookNow,
@@ -53,7 +52,7 @@ export function NavActions({
                 <span className="text-white/30 text-[9px] truncate max-w-[120px] font-mono">
                   {user?.email}
                 </span>
-                {(user?.role === 'admin' || user?.role === 'barber') && (
+                {(user?.role === 'admin') && (
                   <span className="text-vintage-tan text-[8px] font-bold uppercase">
                     {user?.role}
                   </span>
@@ -127,7 +126,7 @@ export function NavActions({
       </div>
       
       {/* Admin Indicators */}
-      {isAuthenticated && (isAdmin || isBarber) && (
+      {isAuthenticated && isAdmin && (
         <div className="hidden lg:flex items-center gap-3">
           <div className="flex items-center gap-2 bg-blue-500/10 border border-blue-500/20 rounded-full px-3 py-1.5">
             <Calendar size={12} className="text-blue-400" />
@@ -171,7 +170,7 @@ export function NavActions({
             <span className="text-white/70 max-w-[100px] truncate">
               {user?.name || user?.email}
             </span>
-            {(user?.role === 'admin' || user?.role === 'barber') && (
+            {(user?.role === 'admin') && (
               <span className="px-2 py-0.5 bg-vintage-tan/20 text-vintage-tan rounded text-[7px] font-bold uppercase">
                 {user?.role}
               </span>

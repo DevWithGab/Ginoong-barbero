@@ -18,13 +18,17 @@ const customerSchema = new mongoose.Schema({
       'Please enter a valid email address'
     ]
   },
+  picture: {
+    type: String,
+    default: ''
+  },
   phone: {
     type: String,
     required: false,
     trim: true,
     default: '',
     match: [
-      /^$|^[\+]?[1-9][\d]{0,15}$/,
+      /^$|^[\+]?[0-9]{10,15}$/,
       'Please enter a valid phone number'
     ]
   },

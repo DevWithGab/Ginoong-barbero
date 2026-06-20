@@ -48,7 +48,7 @@ export const AdminRoute = ({ children, fallback = null }) => {
 };
 
 // ============================================
-// BARBER PROTECTED ROUTE
+// BARBER PROTECTED ROUTE (admin only now)
 // ============================================
 export const BarberRoute = ({ children, fallback = null }) => {
   const { user, loading, isAuthenticated } = useAuth();
@@ -62,8 +62,7 @@ export const BarberRoute = ({ children, fallback = null }) => {
     return <Navigate to="/admin/login" state={{ from: location }} replace />;
   }
 
-  // Allow both barbers and admins
-  if (user?.role !== 'barber' && user?.role !== 'admin') {
+  if (user?.role !== 'admin') {
     return <Navigate to="/unauthorized" replace />;
   }
 

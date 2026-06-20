@@ -32,10 +32,10 @@ const userSchema = new mongoose.Schema({
   role: {
     type: String,
     enum: {
-      values: ['admin', 'barber'],
-      message: 'Role must be either admin or barber'
+      values: ['admin', 'customer'],
+      message: 'Role must be either admin or customer'
     },
-    default: 'barber'
+    default: 'customer'
   },
   isActive: {
     type: Boolean,
@@ -233,7 +233,7 @@ userSchema.methods.canPerformAdminActions = function() {
 
 // Method to check if user can manage appointments
 userSchema.methods.canManageAppointments = function() {
-  return (this.role === 'admin' || this.role === 'barber') && this.isActive;
+  return this.role === 'admin' && this.isActive;
 };
 
 // Static method to find active users

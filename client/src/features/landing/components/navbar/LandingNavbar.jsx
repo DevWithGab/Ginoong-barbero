@@ -15,10 +15,10 @@ export function LandingNavbar({ onBookNow }) {
   const [scrollProgress, setScrollProgress] = useState(0);
   
   const navigate = useNavigate();
-  const { user, logout, isAuthenticated, isAdmin, isBarber } = useAuth();
+  const { user, logout, isAuthenticated, isAdmin } = useAuth();
 
   const { data: pendingAppointments } = useAppointments(
-    isAuthenticated && (isAdmin || isBarber) ? { status: 'Pending', limit: 5 } : null
+    isAuthenticated && isAdmin ? { status: 'Pending', limit: 5 } : null
   );
 
   const pendingCount = pendingAppointments?.data?.length || 0;
@@ -98,7 +98,6 @@ export function LandingNavbar({ onBookNow }) {
                 isAuthenticated={isAuthenticated}
                 user={user}
                 isAdmin={isAdmin}
-                isBarber={isBarber}
                 pendingCount={pendingCount}
                 todayAppointments={todayAppointments}
                 onBookNow={onBookNow}
@@ -115,7 +114,7 @@ export function LandingNavbar({ onBookNow }) {
                 className="lg:hidden text-white p-2.5 bg-white/5 rounded-full hover:bg-white/10 transition-colors border border-white/5 relative ml-4"
               >
                 <Menu size={20} />
-                {isAuthenticated && (isAdmin || isBarber) && pendingCount > 0 && (
+                {isAuthenticated && isAdmin && pendingCount > 0 && (
                   <div className="absolute -top-1 -right-1 w-4 h-4 bg-orange-500 rounded-full flex items-center justify-center">
                     <span className="text-[8px] font-bold text-white">
                       {pendingCount > 9 ? '9+' : pendingCount}
@@ -135,7 +134,6 @@ export function LandingNavbar({ onBookNow }) {
         isAuthenticated={isAuthenticated}
         user={user}
         isAdmin={isAdmin}
-        isBarber={isBarber}
         pendingCount={pendingCount}
         todayAppointments={todayAppointments}
         onBookNow={onBookNow}

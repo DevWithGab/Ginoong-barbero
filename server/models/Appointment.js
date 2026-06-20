@@ -14,7 +14,8 @@ const appointmentSchema = new mongoose.Schema({
   barber: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Barber',
-    required: [true, 'Barber is required']
+    required: false,
+    default: null
   },
   dateTime: {
     type: Date,

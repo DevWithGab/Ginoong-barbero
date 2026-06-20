@@ -26,8 +26,7 @@ export function MobileMenu({
   onClose, 
   isAuthenticated, 
   user, 
-  isAdmin, 
-  isBarber,
+  isAdmin,
   pendingCount = 0,
   todayAppointments = 0,
   onBookNow,
@@ -52,9 +51,9 @@ export function MobileMenu({
   ];
 
   const adminLinks = [
-    { name: 'Dashboard', href: '/admin', roles: ['admin', 'barber'] },
-    { name: 'Appointments', href: '/admin/appointments', roles: ['admin', 'barber'] },
-    { name: 'Customers', href: '/admin/customers', roles: ['admin', 'barber'] },
+    { name: 'Dashboard', href: '/admin', roles: ['admin'] },
+    { name: 'Appointments', href: '/admin/appointments', roles: ['admin'] },
+    { name: 'Customers', href: '/admin/customers', roles: ['admin'] },
     { name: 'Services', href: '/admin/services', roles: ['admin'] },
     { name: 'Barbers', href: '/admin/barbers', roles: ['admin'] },
     { name: 'Settings', href: '/admin/settings', roles: ['admin'] },
@@ -88,7 +87,7 @@ export function MobileMenu({
                   {BUSINESS_INFO.tagline}
                 </span>
                 {/* Mobile Admin Stats */}
-                {isAuthenticated && (isAdmin || isBarber) && (
+                {isAuthenticated && isAdmin && (
                   <div className="flex gap-2 mt-2 flex-wrap">
                     <div className="bg-blue-500/10 px-2 py-1 rounded text-[8px] text-blue-400">
                       Today: {todayAppointments}
@@ -142,10 +141,10 @@ export function MobileMenu({
               </div>
 
               {/* Admin Menu */}
-              {isAuthenticated && (isAdmin || isBarber) && (
+              {isAuthenticated && isAdmin && (
                 <div className="space-y-6">
                   <span className="text-[9px] font-bold text-white/20 uppercase tracking-[0.4em] block mb-4 border-b border-white/5 pb-2">
-                    {isAdmin ? 'Admin Panel' : 'Barber Panel'}
+                      Admin Panel
                   </span>
                   {adminLinks
                     .filter(link => link.roles.includes(user?.role))
@@ -213,7 +212,7 @@ export function MobileMenu({
                       <span className="text-white/30 text-[9px] truncate max-w-[120px] font-mono">
                         {user?.email}
                       </span>
-                      {(user?.role === 'admin' || user?.role === 'barber') && (
+                      {(user?.role === 'admin') && (
                         <span className="text-vintage-tan text-[8px] font-bold uppercase">
                           {user?.role}
                         </span>

@@ -132,7 +132,7 @@ export const CustomersTab = ({
                  <div key={c._id} className="grid grid-cols-12 gap-4 px-10 py-6 items-center hover:bg-[#f9fafb] transition-colors group">
                    <div className="col-span-3 flex items-center gap-4">
                       <div className="w-12 h-12 rounded-full overflow-hidden bg-[#f4f4f5] border border-[#efefef]">
-                         <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${c.name}`} alt="" />
+                         <img src={c.picture || `https://api.dicebear.com/7.x/avataaars/svg?seed=${c.name}`} alt="" />
                       </div>
                       <div className="flex items-center gap-2">
                          <p className="text-[14px] font-bold text-[#18181b]">{c.name}</p>

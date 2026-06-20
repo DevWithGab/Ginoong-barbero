@@ -45,10 +45,10 @@ export function Navbar({ onBookNow }) {
   const lenis = useLenis();
 
   // Real authentication hook
-  const { user, logout, isAuthenticated, isAdmin, isBarber } = useAuth();
+  const { user, logout, isAuthenticated, isAdmin } = useAuth();
 
-  // Backend data hooks (only fetch if authenticated and user has staff role)
-  const shouldFetch = isAuthenticated && (isAdmin || isBarber);
+  // Backend data hooks (only fetch if authenticated and user is admin)
+  const shouldFetch = isAuthenticated && isAdmin;
   const { data: dashboardMetrics, loading: metricsLoading } = useDashboardMetrics(shouldFetch);
   const { data: pendingAppointments } = useAppointments(shouldFetch ? { 
     status: 'Pending', 
@@ -60,7 +60,7 @@ export function Navbar({ onBookNow }) {
 
   useEffect(() => {
     // Set up notifications from pending appointments (only for staff)
-    if (pendingAppointments?.data && isAuthenticated && (isAdmin || isBarber)) {
+    if (pendingAppointments?.data && isAuthenticated && isAdmin) {
       const newNotifications = pendingAppointments.data.map(appointment => ({
         id: appointment._id,
         type: 'appointment',
@@ -70,7 +70,7 @@ export function Navbar({ onBookNow }) {
       }));
       setNotifications(newNotifications);
     }
-  }, [pendingAppointments, isAuthenticated, isAdmin, isBarber]);
+  }, [pendingAppointments, isAuthenticated, isAdmin]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -232,7 +232,7 @@ export function Navbar({ onBookNow }) {
               </div>
               
               {/* Admin Dashboard Indicators */}
-              {isAuthenticated && (isAdmin || isBarber) && (
+              {isAuthenticated && isAdmin && (
                 <div className="hidden lg:flex items-center gap-3">
                   {/* Today's Appointments Indicator */}
                   <div className="flex items-center gap-2 bg-blue-500/10 border border-blue-500/20 rounded-full px-3 py-1.5">
@@ -323,7 +323,7 @@ export function Navbar({ onBookNow }) {
                   className="text-white p-2.5 bg-white/5 rounded-full hover:bg-white/10 transition-colors border border-white/5 relative"
                 >
                   <Menu size={20} />
-                  {isAuthenticated && (isAdmin || isBarber) && pendingCount > 0 && (
+                  {isAuthenticated && isAdmin && pendingCount > 0 && (
                     <div className="absolute -top-1 -right-1 w-4 h-4 bg-orange-500 rounded-full flex items-center justify-center">
                       <span className="text-[8px] font-bold text-white">
                         {pendingCount > 9 ? '9+' : pendingCount}
@@ -360,7 +360,7 @@ export function Navbar({ onBookNow }) {
                   <span className="text-vintage-tan text-[10px] font-bold uppercase tracking-[0.4em] font-slab italic">{BUSINESS_INFO.name}</span>
                   <span className="text-[8px] text-white/30 uppercase tracking-[0.2em]">Crafting Excellence</span>
                   {/* Mobile Admin Stats */}
-                  {isAuthenticated && (isAdmin || isBarber) && (
+                  {isAuthenticated && isAdmin && (
                     <div className="flex gap-2 mt-2">
                       <div className="bg-blue-500/10 px-2 py-1 rounded text-[8px] text-blue-400">
                         Today: {todayAppointments}
@@ -413,15 +413,15 @@ export function Navbar({ onBookNow }) {
                 </div>
 
                 {/* Admin Menu Section */}
-                {isAuthenticated && (isAdmin || isBarber) && (
+                {isAuthenticated && isAdmin && (
                   <div className="space-y-6">
                     <span className="text-[9px] font-bold text-white/20 uppercase tracking-[0.4em] block mb-4 border-b border-white/5 pb-2">
-                      {isAdmin ? 'Admin Panel' : 'Barber Panel'}
+                      Admin Panel
                     </span>
                     {[
-                      { name: 'Dashboard', href: '/admin', roles: ['admin', 'barber'] },
-                      { name: 'Appointments', href: '/admin/appointments', roles: ['admin', 'barber'] },
-                      { name: 'Customers', href: '/admin/customers', roles: ['admin', 'barber'] },
+                    { name: 'Dashboard', href: '/admin', roles: ['admin'] },
+                    { name: 'Appointments', href: '/admin/appointments', roles: ['admin'] },
+                    { name: 'Customers', href: '/admin/customers', roles: ['admin'] },
                       { name: 'Services', href: '/admin/services', roles: ['admin'] },
                       { name: 'Barbers', href: '/admin/barbers', roles: ['admin'] },
                       { name: 'Settings', href: '/admin/settings', roles: ['admin'] },
