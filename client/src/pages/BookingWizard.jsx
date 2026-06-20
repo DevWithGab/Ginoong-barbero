@@ -22,6 +22,12 @@ import { StaffDetailModal } from "../features/booking/components/StaffDetailModa
 import { LoginModal } from "../features/booking/components/LoginModal";
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || 'your-google-client-id';
+const API_BASE = import.meta.env.VITE_API_BASE_URL?.replace('/api', '') || 'http://localhost:5001';
+
+const getImageUrl = (image) => {
+  if (!image) return null;
+  return image.startsWith('http') ? image : `${API_BASE}${image}`;
+};
 
 const BUSINESS_INFO = {
   name: "GINOONG BARBERO",
@@ -452,14 +458,21 @@ export default function BookingWizard() {
                   <div className="space-y-5 sm:space-y-6">
                     <div className="space-y-3 sm:space-y-4">
                       {selectedServices.map(s => (
-                        <div key={getServiceId(s)} className="flex justify-between items-start group gap-2">
-                          <div className="space-y-0.5">
-                            <p className="font-serif font-bold text-xs sm:text-sm uppercase tracking-tight text-white leading-tight">{s.name}</p>
-                            <div className="flex items-center gap-1.5 opacity-40">
-                              <span className="text-[9px] font-bold uppercase tracking-widest">{s.duration} mins</span>
+                        <div key={getServiceId(s)} className="flex items-center gap-3 group gap-2">
+                          {getImageUrl(s.image) && (
+                            <div className="w-9 h-9 rounded-lg overflow-hidden bg-white/5 border border-white/10 shrink-0">
+                              <img src={getImageUrl(s.image)} alt={s.name} className="w-full h-full object-cover" loading="lazy" referrerPolicy="no-referrer" />
                             </div>
+                          )}
+                          <div className="flex-1 min-w-0 flex justify-between items-start gap-2">
+                            <div className="space-y-0.5 min-w-0">
+                              <p className="font-serif font-bold text-xs sm:text-sm uppercase tracking-tight text-white leading-tight truncate">{s.name}</p>
+                              <div className="flex items-center gap-1.5 opacity-40">
+                                <span className="text-[9px] font-bold uppercase tracking-widest">{s.duration} mins</span>
+                              </div>
+                            </div>
+                            <p className="font-black text-xs sm:text-sm text-vintage-tan shrink-0">₱{s.price}</p>
                           </div>
-                          <p className="font-black text-xs sm:text-sm text-vintage-tan shrink-0">₱{s.price}</p>
                         </div>
                       ))}
                     </div>

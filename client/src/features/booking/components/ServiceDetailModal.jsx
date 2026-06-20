@@ -76,12 +76,12 @@ export function ServiceDetailModal({
                     onClose();
                   }}
                   className={`w-full sm:w-auto px-8 sm:px-12 py-3.5 sm:py-4.5 rounded-full font-black uppercase tracking-[0.2em] text-[10px] sm:text-[11px] transition-all active:scale-95 shadow-xl ${
-                    selectedServices.find(s => s.id === service.id)
+                    selectedServices.find(s => (s._id || s.id) === (service._id || service.id))
                     ? "bg-white text-black"
                     : "bg-vintage-tan text-black hover:bg-white"
                   }`}
                 >
-                  {selectedServices.find(s => s.id === service.id) ? "Remove service" : "Add service"}
+                  {selectedServices.find(s => (s._id || s.id) === (service._id || service.id)) ? "Remove service" : "Add service"}
                 </button>
               </div>
             </div>
