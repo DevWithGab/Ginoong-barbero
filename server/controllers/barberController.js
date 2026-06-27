@@ -36,7 +36,7 @@ const getBarbers = asyncHandler(async (req, res) => {
         {
           $match: {
             barber: barber._id,
-            paymentStatus: 'Paid'
+            status: 'Completed'
           }
         },
         {
@@ -90,7 +90,7 @@ const getBarber = asyncHandler(async (req, res) => {
           $sum: { $cond: [{ $eq: ['$status', 'Cancelled'] }, 1, 0] }
         },
         totalRevenue: {
-          $sum: { $cond: [{ $eq: ['$paymentStatus', 'Paid'] }, '$totalAmount', 0] }
+          $sum: { $cond: [{ $eq: ['$status', 'Completed'] }, '$totalAmount', 0] }
         }
       }
     }

@@ -48,6 +48,25 @@ export const AuthProvider = ({ children }) => {
     initializeAuth();
   }, []);
 
+  // Email/password login
+  const loginWithEmail = useCallback(async (email, password) => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const response = await authAPI.login(email, password);
+      const userData = response.data.user;
+      setUser(userData);
+      return response;
+    } catch (err) {
+      const errorMessage = err.response?.data?.message || err.message || 'Login failed';
+      setError(errorMessage);
+      throw new Error(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   // Google login function
   const loginWithGoogle = useCallback(async (googleToken) => {
     setLoading(true);
@@ -91,6 +110,7 @@ export const AuthProvider = ({ children }) => {
     user,
     loading,
     error,
+    loginWithEmail,
     loginWithGoogle,
     syncUserFromStorage,
     logout,

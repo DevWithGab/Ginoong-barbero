@@ -101,7 +101,7 @@ const getCustomer = asyncHandler(async (req, res) => {
           $sum: { $cond: [{ $eq: ['$status', 'Cancelled'] }, 1, 0] }
         },
         totalSpentCalculated: {
-          $sum: { $cond: [{ $eq: ['$paymentStatus', 'Paid'] }, '$totalAmount', 0] }
+          $sum: { $cond: [{ $eq: ['$status', 'Completed'] }, '$totalAmount', 0] }
         }
       }
     }
@@ -253,21 +253,27 @@ const getCustomerStats = asyncHandler(async (req, res) => {
     }
   ]);
 
-  // Get customer tier distribution
-  const customers = await Customer.find({}, 'totalSpent');
-  const tierDistribution = {
-    Bronze: 0,
-    Silver: 0,
-    Gold: 0,
-    Platinum: 0
-  };
+  // Get customer tier distribution via aggregation
+  const tierResult = await Customer.aggregate([
+    {
+      $group: {
+        _id: {
+          $switch: {
+            branches: [
+              { case: { $gte: ['$totalSpent', 5000] }, then: 'Platinum' },
+              { case: { $gte: ['$totalSpent', 2000] }, then: 'Gold' },
+              { case: { $gte: ['$totalSpent', 500] }, then: 'Silver' }
+            ],
+            default: 'Bronze'
+          }
+        },
+        count: { $sum: 1 }
+      }
+    }
+  ]);
 
-  customers.forEach(customer => {
-    if (customer.totalSpent >= 5000) tierDistribution.Platinum++;
-    else if (customer.totalSpent >= 2000) tierDistribution.Gold++;
-    else if (customer.totalSpent >= 500) tierDistribution.Silver++;
-    else tierDistribution.Bronze++;
-  });
+  const tierDistribution = { Bronze: 0, Silver: 0, Gold: 0, Platinum: 0 };
+  tierResult.forEach(t => { tierDistribution[t._id] = t.count; });
 
   const result = stats[0] || {
     totalCustomers: 0,

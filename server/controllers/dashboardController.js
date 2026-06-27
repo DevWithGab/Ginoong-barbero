@@ -14,22 +14,20 @@ const getDashboardMetrics = asyncHandler(async (req, res) => {
   const endOfDay = new Date(today);
   endOfDay.setHours(23, 59, 59, 999);
 
-  // Today's appointments count (filter by date parts to avoid timezone issues)
-  const allAppointments = await Appointment.find({}).select('dateTime');
-  const todayAppointments = allAppointments.filter(apt => {
-    const d = new Date(apt.dateTime);
-    return d.getFullYear() === today.getFullYear() && d.getMonth() === today.getMonth() && d.getDate() === today.getDate();
-  }).length;
+  // Today's appointments count
+  const todayAppointments = await Appointment.countDocuments({
+    dateTime: { $gte: startOfDay, $lt: endOfDay }
+  });
 
   // Pending approvals count
   const pendingApprovals = await Appointment.countDocuments({
     status: 'Pending'
   });
 
-  // Gross revenue (all paid appointments)
+  // Gross revenue (total from all completed appointments)
   const revenueResult = await Appointment.aggregate([
     {
-      $match: { paymentStatus: 'Paid' }
+      $match: { status: 'Completed' }
     },
     {
       $group: {
@@ -161,7 +159,7 @@ const getRevenueAnalytics = asyncHandler(async (req, res) => {
     {
       $match: {
         dateTime: { $gte: dateRange },
-        paymentStatus: 'Paid'
+        status: 'Completed'
       }
     },
     {
@@ -246,7 +244,7 @@ const getAppointmentAnalytics = asyncHandler(async (req, res) => {
           $sum: { $cond: [{ $eq: ['$status', 'Completed'] }, 1, 0] }
         },
         revenue: {
-          $sum: { $cond: [{ $eq: ['$paymentStatus', 'Paid'] }, '$totalAmount', 0] }
+          $sum: { $cond: [{ $eq: ['$status', 'Completed'] }, '$totalAmount', 0] }
         }
       }
     },
@@ -343,21 +341,27 @@ const getCustomerAnalytics = asyncHandler(async (req, res) => {
     }
   ]);
 
-  // Customer tier distribution
-  const customers = await Customer.find({}, 'totalSpent');
-  const tierDistribution = {
-    Bronze: 0,
-    Silver: 0,
-    Gold: 0,
-    Platinum: 0
-  };
+  // Customer tier distribution via aggregation
+  const tierResult = await Customer.aggregate([
+    {
+      $group: {
+        _id: {
+          $switch: {
+            branches: [
+              { case: { $gte: ['$totalSpent', 5000] }, then: 'Platinum' },
+              { case: { $gte: ['$totalSpent', 2000] }, then: 'Gold' },
+              { case: { $gte: ['$totalSpent', 500] }, then: 'Silver' }
+            ],
+            default: 'Bronze'
+          }
+        },
+        count: { $sum: 1 }
+      }
+    }
+  ]);
 
-  customers.forEach(customer => {
-    if (customer.totalSpent >= 5000) tierDistribution.Platinum++;
-    else if (customer.totalSpent >= 2000) tierDistribution.Gold++;
-    else if (customer.totalSpent >= 500) tierDistribution.Silver++;
-    else tierDistribution.Bronze++;
-  });
+  const tierDistribution = { Bronze: 0, Silver: 0, Gold: 0, Platinum: 0 };
+  tierResult.forEach(t => { tierDistribution[t._id] = t.count; });
 
   // Top customers by spending
   const topCustomers = await Customer.find({})
@@ -387,21 +391,19 @@ const getCustomerAnalytics = asyncHandler(async (req, res) => {
 // @access  Public
 const getTodaySchedule = asyncHandler(async (req, res) => {
   const today = new Date();
-  const todayYear = today.getFullYear();
-  const todayMonth = today.getMonth();
-  const todayDate = today.getDate();
+  const startOfDay = new Date(today);
+  startOfDay.setHours(0, 0, 0, 0);
+  const endOfDay = new Date(today);
+  endOfDay.setHours(23, 59, 59, 999);
 
-  const todayAppointments = (await Appointment.find({
-    status: { $in: ['Pending', 'Confirmed'] }
+  const todayAppointments = await Appointment.find({
+    status: { $in: ['Pending', 'Confirmed'] },
+    dateTime: { $gte: startOfDay, $lt: endOfDay }
   })
     .populate('customer', 'name phone isVIP picture')
     .populate('service', 'name duration category')
     .populate('barber', 'name role')
-    .sort({ dateTime: 1 }))
-    .filter(apt => {
-      const d = new Date(apt.dateTime);
-      return d.getFullYear() === todayYear && d.getMonth() === todayMonth && d.getDate() === todayDate;
-    });
+    .sort({ dateTime: 1 });
 
   // Group appointments by barber
   const scheduleByBarber = {};

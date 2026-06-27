@@ -50,7 +50,7 @@ const getServices = asyncHandler(async (req, res) => {
         {
           $match: {
             service: service._id,
-            paymentStatus: 'Paid'
+            status: 'Completed'
           }
         },
         {
@@ -97,7 +97,7 @@ const getService = asyncHandler(async (req, res) => {
           $sum: { $cond: [{ $eq: ['$status', 'Completed'] }, 1, 0] }
         },
         totalRevenue: {
-          $sum: { $cond: [{ $eq: ['$paymentStatus', 'Paid'] }, '$totalAmount', 0] }
+          $sum: { $cond: [{ $eq: ['$status', 'Completed'] }, '$totalAmount', 0] }
         },
         averageRating: { $avg: '$rating' }
       }
@@ -280,7 +280,7 @@ const getPopularServices = asyncHandler(async (req, res) => {
         _id: '$service',
         bookingCount: { $sum: 1 },
         totalRevenue: {
-          $sum: { $cond: [{ $eq: ['$paymentStatus', 'Paid'] }, '$totalAmount', 0] }
+          $sum: { $cond: [{ $eq: ['$status', 'Completed'] }, '$totalAmount', 0] }
         }
       }
     },

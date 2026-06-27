@@ -3,6 +3,7 @@ const Appointment = require('../models/Appointment');
 const Customer = require('../models/Customer');
 const Service = require('../models/Service');
 const Barber = require('../models/Barber');
+const { broadcast } = require('../utils/sse');
 
 // @desc    Create new appointment
 // @route   POST /api/appointments
@@ -35,25 +36,6 @@ const createAppointment = asyncHandler(async (req, res) => {
   // Check if the time slot is available (only if specific barber selected)
   const appointmentDate = new Date(dateTime);
   const endTime = new Date(appointmentDate.getTime() + (service.duration * 60000));
-
-  if (barberId) {
-    const conflictingAppointment = await Appointment.findOne({
-      barber: barberId,
-      status: { $in: ['Confirmed'] },
-      dateTime: { $lt: endTime },
-      $expr: {
-        $gt: [
-          { $add: ['$dateTime', { $multiply: ['$duration', 60000] }] },
-          appointmentDate
-        ]
-      }
-    });
-
-    if (conflictingAppointment) {
-      res.status(400);
-      throw new Error('Time slot is not available');
-    }
-  }
 
   // Find or create customer
   let customer;
@@ -96,6 +78,28 @@ const createAppointment = asyncHandler(async (req, res) => {
     notes: notes || ''
   });
 
+  // Atomically verify no conflict exists after creation (prevents double-booking race condition)
+  if (barberId) {
+    const conflictCount = await Appointment.countDocuments({
+      _id: { $ne: appointment._id },
+      barber: barberId,
+      status: { $in: ['Pending', 'Confirmed'] },
+      dateTime: { $lt: endTime },
+      $expr: {
+        $gt: [
+          { $add: ['$dateTime', { $multiply: ['$duration', 60000] }] },
+          appointmentDate
+        ]
+      }
+    });
+
+    if (conflictCount > 0) {
+      await appointment.deleteOne();
+      res.status(400);
+      throw new Error('Time slot is no longer available');
+    }
+  }
+
   // Populate the appointment with related data
   const populatedAppointment = await Appointment.findById(appointment._id)
     .populate('customer', 'name email phone picture')
@@ -106,6 +110,8 @@ const createAppointment = asyncHandler(async (req, res) => {
     success: true,
     data: populatedAppointment
   });
+
+  broadcast('appointment:created', { appointment: populatedAppointment });
 });
 
 // @desc    Get all appointments with filtering and pagination
@@ -119,7 +125,6 @@ const getAppointments = asyncHandler(async (req, res) => {
     barberId,
     serviceId,
     status,
-    paymentStatus,
     customerId,
     sortBy = 'dateTime',
     sortOrder = 'asc'
@@ -138,7 +143,6 @@ const getAppointments = asyncHandler(async (req, res) => {
   if (barberId) filter.barber = barberId;
   if (serviceId) filter.service = serviceId;
   if (status) filter.status = status;
-  if (paymentStatus) filter.paymentStatus = paymentStatus;
   if (customerId) filter.customer = customerId;
 
   // Calculate pagination
@@ -248,7 +252,7 @@ const getAvailableSlots = asyncHandler(async (req, res) => {
 // @route   PATCH /api/appointments/:id
 // @access  Public
 const updateAppointment = asyncHandler(async (req, res) => {
-  const { status, paymentStatus, notes } = req.body;
+  const { status, notes } = req.body;
 
   const appointment = await Appointment.findById(req.params.id);
 
@@ -259,7 +263,6 @@ const updateAppointment = asyncHandler(async (req, res) => {
 
   // Update fields if provided
   if (status) appointment.status = status;
-  if (paymentStatus) appointment.paymentStatus = paymentStatus;
   if (notes !== undefined) appointment.notes = notes;
 
   const updatedAppointment = await appointment.save();
@@ -274,6 +277,8 @@ const updateAppointment = asyncHandler(async (req, res) => {
     success: true,
     data: populatedAppointment
   });
+
+  broadcast('appointment:updated', { appointment: populatedAppointment });
 });
 
 // @desc    Get single appointment

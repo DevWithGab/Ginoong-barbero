@@ -4,6 +4,7 @@ const cors = require('cors');
 const dotenv = require('dotenv');
 const connectDB = require('./configs/db');
 const { notFound, errorHandler } = require('./middleware/errorMiddleware');
+const { addClient } = require('./utils/sse');
 
 // Load environment variables
 dotenv.config();
@@ -33,6 +34,19 @@ app.use('/api/services', require('./routes/serviceRoutes'));
 app.use('/api/barbers', require('./routes/barberRoutes'));
 app.use('/api/dashboard', require('./routes/dashboardRoutes'));
 app.use('/api/gallery', require('./routes/galleryRoutes'));
+
+// SSE endpoint for real-time updates
+app.get('/api/events', (req, res) => {
+  res.writeHead(200, {
+    'Content-Type': 'text/event-stream',
+    'Cache-Control': 'no-cache',
+    'Connection': 'keep-alive',
+    'Access-Control-Allow-Origin': req.headers.origin || '*'
+  });
+  res.write('retry: 5000\n\n');
+  addClient(res);
+  req.on('close', () => {});
+});
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

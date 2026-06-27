@@ -1,10 +1,12 @@
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
+const bcrypt = require('bcryptjs');
 const Service = require('../models/Service');
 const Barber = require('../models/Barber');
 const Customer = require('../models/Customer');
 const Appointment = require('../models/Appointment');
 const GalleryImage = require('../models/Gallery');
+const User = require('../models/User');
 
 dotenv.config();
 
@@ -365,6 +367,82 @@ const clearDatabase = async () => {
   }
 };
 
+const resetAdminPassword = async () => {
+  const email = process.argv[3];
+  const password = process.argv[4];
+
+  if (!email || !password) {
+    console.log('Usage: node seeders/sampleData.js resetpw <email> <newpassword>');
+    console.log('Example: node seeders/sampleData.js resetpw admin@ginoongbarbero.com newpass123');
+    mongoose.connection.close();
+    return;
+  }
+
+  try {
+    const user = await User.findOne({ email });
+    if (!user) {
+      console.log(`❌ No user found with email ${email}`);
+      mongoose.connection.close();
+      return;
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    user.password = await bcrypt.hash(password, salt);
+    await user.save();
+
+    console.log('✅ Password updated successfully!');
+    console.log(`   Email:  ${user.email}`);
+    console.log(`   Role:   ${user.role}`);
+  } catch (error) {
+    console.error('❌ Error updating password:', error.message);
+  } finally {
+    mongoose.connection.close();
+  }
+};
+
+const createAdmin = async () => {
+  const email = process.argv[3];
+  const password = process.argv[4];
+  const name = process.argv[5] || 'Admin';
+
+  if (!email || !password) {
+    console.log('Usage: node seeders/sampleData.js admin <email> <password> [name]');
+    console.log('Example: node seeders/sampleData.js admin admin@ginoongbarbero.com mypassword123 "Gabriel"');
+    mongoose.connection.close();
+    return;
+  }
+
+  try {
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      console.log(`❌ User with email ${email} already exists`);
+      mongoose.connection.close();
+      return;
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    const user = await User.create({
+      name,
+      email,
+      password: hashedPassword,
+      role: 'admin',
+      isActive: true
+    });
+
+    console.log('✅ Admin user created successfully!');
+    console.log(`   Name:     ${user.name}`);
+    console.log(`   Email:    ${user.email}`);
+    console.log(`   Role:     ${user.role}`);
+    console.log(`   ID:       ${user._id}`);
+  } catch (error) {
+    console.error('❌ Error creating admin:', error.message);
+  } finally {
+    mongoose.connection.close();
+  }
+};
+
 // Command line arguments
 const command = process.argv[2];
 
@@ -378,10 +456,18 @@ const runSeeder = async () => {
     case 'clear':
       await clearDatabase();
       break;
+    case 'admin':
+      await createAdmin();
+      break;
+    case 'resetpw':
+      await resetAdminPassword();
+      break;
     default:
       console.log('Usage:');
       console.log('  node seeders/sampleData.js seed  - Seed sample data');
       console.log('  node seeders/sampleData.js clear - Clear all data');
+      console.log('  node seeders/sampleData.js admin <email> <password> [name] - Create admin user');
+      console.log('  node seeders/sampleData.js resetpw <email> <newpassword> - Reset password for existing user');
       mongoose.connection.close();
   }
 };

@@ -28,15 +28,12 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
-      // Only clear auth and redirect on admin pages
-      // Customer-facing pages handle 401 errors locally
-      if (isAdminPage()) {
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-        localStorage.removeItem('userRole');
-        window.location.href = '/admin/login';
-      }
+    const isLoginPage = window.location.pathname === '/admin/login';
+    if (error.response?.status === 401 && !isLoginPage) {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      localStorage.removeItem('userRole');
+      window.location.href = '/admin/login';
     }
     return Promise.reject(error);
   }

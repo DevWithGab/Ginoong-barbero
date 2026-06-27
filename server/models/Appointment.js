@@ -60,7 +60,6 @@ appointmentSchema.index({ customer: 1 });
 appointmentSchema.index({ barber: 1 });
 appointmentSchema.index({ service: 1 });
 appointmentSchema.index({ status: 1 });
-appointmentSchema.index({ paymentStatus: 1 });
 appointmentSchema.index({ barber: 1, dateTime: 1 });
 
 // Compound index for availability checking
@@ -83,46 +82,6 @@ appointmentSchema.pre('save', function(next) {
   next();
 });
 
-// Pre-findOneAndUpdate middleware to track previous status for update operations
-appointmentSchema.pre('findOneAndUpdate', async function(next) {
-  const update = this.getUpdate();
-  if (update && (update.status || update.$set?.status)) {
-    const doc = await this.model.findOne(this.getFilter()).select('status');
-    if (doc) {
-      this._previousStatus = doc.status;
-    }
-  }
-  next();
-});
-
-// Post-findOneAndUpdate middleware to update customer stats after update
-appointmentSchema.post('findOneAndUpdate', async function(doc) {
-  if (doc && this._previousStatus) {
-    const newStatus = doc.status;
-    const previousStatus = this._previousStatus;
-    
-    try {
-      const Customer = mongoose.model('Customer');
-      
-      // Status changed to Completed
-      if (newStatus === 'Completed' && previousStatus !== 'Completed') {
-        await Customer.findByIdAndUpdate(doc.customer, {
-          $inc: { totalVisits: 1, totalSpent: doc.totalAmount },
-          lastAppointment: doc.dateTime
-        });
-      }
-      // Status changed from Completed
-      else if (previousStatus === 'Completed' && newStatus !== 'Completed') {
-        await Customer.findByIdAndUpdate(doc.customer, {
-          $inc: { totalVisits: -1, totalSpent: -doc.totalAmount }
-        });
-      }
-    } catch (error) {
-      console.error('Error updating customer stats:', error);
-    }
-  }
-});
-
 // Pre-save middleware to update customer stats when appointment status changes
 appointmentSchema.pre('save', async function(next) {
   if (this.isModified('status') && !this.isNew) {
@@ -142,12 +101,18 @@ appointmentSchema.pre('save', async function(next) {
       }
       // If status changed from Completed to something else, decrement stats
       else if (previousStatus === 'Completed' && this.status !== 'Completed') {
-        await Customer.findByIdAndUpdate(this.customer, {
-          $inc: { 
-            totalVisits: -1,
-            totalSpent: -this.totalAmount 
-          }
-        });
+        // Fetch current customer stats to prevent going negative
+        const customer = await Customer.findById(this.customer).select('totalVisits totalSpent');
+        if (customer) {
+          const newTotalVisits = Math.max(0, customer.totalVisits - 1);
+          const newTotalSpent = Math.max(0, customer.totalSpent - this.totalAmount);
+          await Customer.findByIdAndUpdate(this.customer, {
+            $set: { 
+              totalVisits: newTotalVisits,
+              totalSpent: newTotalSpent
+            }
+          });
+        }
       }
     } catch (error) {
       console.error('Error updating customer stats:', error);

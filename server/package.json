@@ -8,6 +8,8 @@
     "dev": "nodemon server.js",
     "seed": "node seeders/sampleData.js seed",
     "clear": "node seeders/sampleData.js clear",
+    "create-admin": "node seeders/sampleData.js admin",
+    "reset-password": "node seeders/sampleData.js resetpw",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
