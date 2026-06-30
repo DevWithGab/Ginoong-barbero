@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { InsightCard } from "../UI/InsightCard";
 import { customerAPI } from "../../../services/customerService";
+import { swalError } from "../../../utils/swal";
 
 export const CustomersTab = ({ 
   customers: propCustomers, 
@@ -34,6 +35,7 @@ export const CustomersTab = ({
       setPagination(res.pagination || { page: 1, limit: 10, total: 0, pages: 0 });
     } catch (err) {
       console.error('Failed to fetch customers:', err);
+      swalError({ title: 'Fetch Failed', text: 'Could not load customers. Please try again.' });
     } finally {
       setLoading(false);
     }

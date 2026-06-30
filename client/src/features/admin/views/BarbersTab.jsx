@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { UserCircle, Edit, Plus, ChevronLeft, ChevronRight, X, Image as ImageIcon, Trash2, Loader2, Camera } from "lucide-react";
 import { SimpleStatCard } from "../UI/SimpleStatCard";
 import { barberAPI } from "../../../services/barberService";
+import { swalConfirm, swalSuccess, swalError } from "../../../utils/swal";
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL?.replace('/api', '') || 'http://localhost:5001';
 
@@ -95,21 +96,35 @@ export const BarbersTab = () => {
 
       fetchBarbers();
       handleCloseModal();
+      swalSuccess({
+        title: editingBarber ? 'Barber Updated!' : 'Barber Added!',
+        text: `Successfully saved ${formData.name}.`,
+        timer: 2000,
+        showConfirmButton: false,
+      });
     } catch (err) {
       console.error('Failed to save barber:', err);
+      swalError({ title: 'Save Failed', text: err.response?.data?.message || 'Could not save barber.' });
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm("Are you sure you want to delete this barber?")) {
+    const result = await swalConfirm({
+      title: 'Delete Barber?',
+      text: 'This action cannot be undone.',
+      icon: 'warning',
+      confirmText: 'Yes, delete it!',
+    });
+    if (result.isConfirmed) {
       try {
         await barberAPI.deleteBarber(id);
         fetchBarbers();
+        swalSuccess({ title: 'Deleted!', text: 'Barber has been removed.' });
       } catch (err) {
         const message = err.response?.data?.message || 'Failed to delete barber.';
-        alert(message);
+        swalError({ title: 'Error', text: message });
       }
     }
   };

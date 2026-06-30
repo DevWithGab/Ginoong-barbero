@@ -19,6 +19,7 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { SimpleStatCard } from "../UI/SimpleStatCard";
 import { galleryAPI } from "../../../services/galleryService";
+import { swalConfirm, swalSuccess, swalError } from "../../../utils/swal";
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL?.replace('/api', '') || 'http://localhost:5001';
 const CATEGORIES = ['Barbers', 'Haircuts', 'Kids', 'Products', 'Barbershop'];
@@ -173,21 +174,35 @@ export const GalleryTab = () => {
 
       fetchImages();
       handleCloseModal();
+      swalSuccess({
+        title: editingImage ? 'Image Updated!' : 'Image Added!',
+        text: `Successfully saved "${formData.title}".`,
+        timer: 2000,
+        showConfirmButton: false,
+      });
     } catch (err) {
       const msg = err.response?.data?.error || err.response?.data?.message || err.message;
-      setErrors({ submit: msg });
+      swalError({ title: 'Save Failed', text: msg });
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const handleDelete = async (image) => {
-    if (!window.confirm(`Delete "${image.title}"? This cannot be undone.`)) return;
-    try {
-      await galleryAPI.deleteGalleryImage(image._id);
-      fetchImages();
-    } catch (err) {
-      alert(err.response?.data?.error || 'Failed to delete image');
+    const result = await swalConfirm({
+      title: 'Delete Image?',
+      text: `"${image.title}" will be permanently removed.`,
+      icon: 'warning',
+      confirmText: 'Yes, delete it!',
+    });
+    if (result.isConfirmed) {
+      try {
+        await galleryAPI.deleteGalleryImage(image._id);
+        fetchImages();
+        swalSuccess({ title: 'Deleted!', text: 'Image has been removed.' });
+      } catch (err) {
+        swalError({ title: 'Error', text: err.response?.data?.error || 'Failed to delete image' });
+      }
     }
   };
 

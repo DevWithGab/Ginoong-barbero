@@ -3,6 +3,7 @@ import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { AlertCircle, Loader2, Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
+import { swalError, swalSuccess } from '../../utils/swal';
 import logo from '../../assets/logo/ginoong-barbero_LOGO.png';
 
 export const LoginForm = () => {
@@ -35,10 +36,17 @@ export const LoginForm = () => {
 
     try {
       await loginWithEmail(email, password);
+      swalSuccess({
+        title: 'Welcome Back!',
+        text: 'Successfully signed in.',
+        timer: 1500,
+        showConfirmButton: false,
+      });
       navigate(from, { replace: true });
     } catch (error) {
-      setErrors({
-        submit: error.message || 'Login failed. Please try again.'
+      swalError({
+        title: 'Login Failed',
+        text: error.message || 'Invalid credentials. Please try again.',
       });
     } finally {
       setIsLoading(false);

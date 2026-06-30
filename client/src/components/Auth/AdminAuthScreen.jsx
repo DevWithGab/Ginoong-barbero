@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Shield, AlertCircle, Loader2, Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
+import { swalError, swalSuccess } from '../../utils/swal';
 
 export const AdminAuthScreens = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -34,12 +35,24 @@ export const AdminAuthScreens = () => {
       const response = await loginWithEmail(email, password);
       const userData = response.data.user;
       if (userData.role !== 'admin') {
-        setError('This account is not authorized for admin access.');
+        swalError({
+          title: 'Access Denied',
+          text: 'This account is not authorized for admin access.',
+        });
         await logout();
         return;
       }
+      swalSuccess({
+        title: 'Access Granted',
+        text: 'Welcome to the admin panel.',
+        timer: 1500,
+        showConfirmButton: false,
+      });
     } catch (err) {
-      setError(err.message || 'Login failed. Please try again.');
+      swalError({
+        title: 'Login Failed',
+        text: err.message || 'Login failed. Please try again.',
+      });
     } finally {
       setIsLoading(false);
     }

@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { SimpleStatCard } from "../UI/SimpleStatCard";
 import { appointmentAPI } from "../../../services/appointmentService";
+import { swalConfirm, swalSuccess, swalError } from "../../../utils/swal";
 import {
   startOfMonth, endOfMonth, startOfWeek, endOfWeek,
   eachDayOfInterval, format, isSameMonth, isSameDay,
@@ -130,6 +131,20 @@ export const AppointmentsTab = ({
   };
 
   const handleUpdateStatus = async (id, newStatus) => {
+    const labels = {
+      Confirmed: 'Approve this appointment?',
+      Rejected: 'Reject this appointment?',
+      Completed: 'Mark this appointment as completed?',
+      Cancelled: 'Cancel this appointment?',
+    };
+
+    const result = await swalConfirm({
+      title: labels[newStatus] || 'Update Status?',
+      confirmText: 'Yes',
+    });
+
+    if (!result.isConfirmed) return;
+
     try {
       await appointmentAPI.updateAppointment(id, { status: newStatus });
       setAppointments(prev => prev.map(a => a._id === id ? { ...a, status: newStatus } : a));
@@ -138,8 +153,15 @@ export const AppointmentsTab = ({
         setSelectedAppointment(prev => ({ ...prev, status: newStatus }));
       }
       onStatusChange?.();
+      swalSuccess({
+        title: 'Status Updated',
+        text: `Appointment marked as ${newStatus}.`,
+        timer: 1500,
+        showConfirmButton: false,
+      });
     } catch (err) {
       console.error('Failed to update status:', err);
+      swalError({ title: 'Update Failed', text: 'Could not update appointment status.' });
     }
   };
 

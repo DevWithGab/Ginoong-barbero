@@ -26,6 +26,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import { SimpleStatCard } from "../UI/SimpleStatCard";
 import { serviceAPI } from "../../../services/serviceMenu";
+import { swalConfirm, swalSuccess, swalError } from "../../../utils/swal";
 
 const CATEGORIES = ['Haircuts', 'Beard', 'Hair Color', 'Add-ons', 'Packages'];
 
@@ -195,21 +196,35 @@ export const ServicesTab = () => {
 
       fetchServices();
       handleCloseModal();
+      swalSuccess({
+        title: editingService ? 'Service Updated!' : 'Service Added!',
+        text: `Successfully saved "${formData.name}".`,
+        timer: 2000,
+        showConfirmButton: false,
+      });
     } catch (err) {
       const msg = err.response?.data?.error || err.message;
-      setErrors({ submit: msg });
+      swalError({ title: 'Save Failed', text: msg });
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const handleDelete = async (service) => {
-    if (!window.confirm(`Delete "${service.name}"? This cannot be undone.`)) return;
-    try {
-      await serviceAPI.deleteService(service._id);
-      fetchServices();
-    } catch (err) {
-      alert(err.response?.data?.error || 'Failed to delete service');
+    const result = await swalConfirm({
+      title: 'Delete Service?',
+      text: `"${service.name}" will be permanently removed.`,
+      icon: 'warning',
+      confirmText: 'Yes, delete it!',
+    });
+    if (result.isConfirmed) {
+      try {
+        await serviceAPI.deleteService(service._id);
+        fetchServices();
+        swalSuccess({ title: 'Deleted!', text: 'Service has been removed.' });
+      } catch (err) {
+        swalError({ title: 'Error', text: err.response?.data?.error || 'Failed to delete service' });
+      }
     }
   };
 

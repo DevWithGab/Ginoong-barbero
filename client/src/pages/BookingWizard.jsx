@@ -8,6 +8,7 @@ import { appointmentAPI } from '../services/appointmentService';
 import { authAPI } from '../services/authService';
 import { serviceAPI } from '../services/serviceMenu';
 import { barberAPI } from '../services/barberService';
+import { swalError } from '../utils/swal';
 
 // Step Components - lazy loaded (only Step1 needed immediately)
 import { Step1Services } from "../features/booking/steps/Step1Services";
@@ -134,52 +135,46 @@ export default function BookingWizard() {
     setIsSubmitting(true);
     setAuthError(null);
 
-    // Frontend validation
     if (selectedServices.length === 0) {
-      setAuthError("Please select at least one service.");
+      swalError({ title: 'Missing Services', text: 'Please select at least one service.' });
       setIsSubmitting(false);
       return;
     }
     if (!formData.name.trim()) {
-      setAuthError("Please enter your name.");
+      swalError({ title: 'Name Required', text: 'Please enter your name.' });
       setIsSubmitting(false);
       return;
     }
     if (!formData.email.trim()) {
-      setAuthError("Please enter your email.");
+      swalError({ title: 'Email Required', text: 'Please enter your email.' });
       setIsSubmitting(false);
       return;
     }
     if (!formData.phone.trim()) {
-      setAuthError("Please enter your phone number.");
+      swalError({ title: 'Phone Required', text: 'Please enter your phone number.' });
       setIsSubmitting(false);
       return;
     }
 
-    // Strip spaces from phone number
     const cleanPhone = formData.phone.replace(/\s+/g, '');
 
     try {
-      // Parse selectedTime (e.g. "09:00 AM") into hours and minutes
       const [timePart, period] = selectedTime.split(' ');
       let [hours, minutes] = timePart.split(':').map(Number);
       if (period === 'PM' && hours !== 12) hours += 12;
       if (period === 'AM' && hours === 12) hours = 0;
 
-      // Combine date and time into a single ISO datetime
       const appointmentDateTime = new Date(selectedDate);
       appointmentDateTime.setHours(hours, minutes, 0, 0);
 
-      // Check if appointment is in the past
       if (appointmentDateTime <= new Date()) {
-        setAuthError("Selected time is in the past. Please choose a future time.");
+        swalError({ title: 'Invalid Time', text: 'Selected time is in the past. Please choose a future time.' });
         setIsSubmitting(false);
         return;
       }
 
-      // Create appointments for all selected services
       const servicesToBook = selectedServices;
-      
+
       for (const service of servicesToBook) {
         const appointmentData = {
           customerInfo: {
@@ -197,17 +192,14 @@ export default function BookingWizard() {
       }
 
       setIsSuccess(true);
-      
-      // Logout after booking confirmed
-      await logout();
 
-      // Navigate after success
-      setTimeout(() => {
-        navigate('/');
-      }, 2000);
+      await logout();
     } catch (error) {
       console.error("Booking error:", error);
-      setAuthError(error.response?.data?.message || error.message || "Failed to create booking. Please try again.");
+      swalError({
+        title: 'Booking Failed',
+        text: error.response?.data?.message || error.message || 'Failed to create booking. Please try again.',
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -220,14 +212,11 @@ export default function BookingWizard() {
     try {
       const result = await authAPI.googleCustomerLogin(googleResponse.credential);
       if (result.data?.token) {
-        // Update auth state with customer data
         const userData = result.data.user;
-        
+
         setShowLoginModal(false);
         setStep(step + 1);
-        // Sync auth context with the new user
         syncUserFromStorage();
-        // Update form data with user info
         setFormData(prev => ({
           ...prev,
           name: userData.name || prev.name,
@@ -236,7 +225,7 @@ export default function BookingWizard() {
       }
     } catch (error) {
       const msg = error.response?.data?.message || error.response?.data?.error || error.message || 'Google sign-in failed';
-      setAuthError(msg);
+      swalError({ title: 'Sign-In Failed', text: msg });
     } finally {
       setAuthLoading(false);
     }
@@ -246,7 +235,23 @@ export default function BookingWizard() {
   if (isSuccess) {
     return (
       <div className="min-h-screen bg-vintage-bg text-vintage-text flex flex-col items-center justify-center p-4 sm:p-6 text-center">
-        <motion.div 
+        {/* Back Button */}
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+          className="mb-8 sm:mb-12"
+        >
+          <button
+            onClick={() => navigate("/")}
+            className="flex items-center gap-2 text-white/40 hover:text-vintage-tan transition-colors text-[10px] font-black uppercase tracking-[0.3em] font-slab"
+          >
+            <ChevronLeft size={14} />
+            <span>Back to Home</span>
+          </button>
+        </motion.div>
+
+        <motion.div
           initial={{ scale: 0, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ type: "spring", damping: 12, stiffness: 200 }}
@@ -255,14 +260,23 @@ export default function BookingWizard() {
           <CheckCircle2 size={32} className="text-black sm:hidden" />
           <CheckCircle2 size={48} className="text-black hidden sm:block" />
         </motion.div>
-        
+
         <h1 className="text-3xl sm:text-4xl md:text-5xl font-serif font-black mb-3 sm:mb-4 uppercase tracking-tighter">Booking Confirmed!</h1>
         <p className="text-white/60 mb-8 sm:mb-10 max-w-md italic font-slab text-base sm:text-lg px-4">
           Everything is set. We've sent a confirmation to your phone. We can't wait to see you at the shop.
         </p>
-        
+
+        {/* Booking Summary Card */}
         <div className="bg-vintage-card p-6 sm:p-10 rounded-2xl w-full max-w-sm border border-white/5 space-y-4 sm:space-y-5 mb-8 sm:mb-12 text-left relative overflow-hidden mx-4">
           <div className="absolute top-0 right-0 w-32 h-32 bg-vintage-tan/5 blur-3xl rounded-full"></div>
+
+          {/* Date & Time - Prominent */}
+          <div className="text-center pb-4 border-b border-white/5">
+            <span className="text-white/30 text-[9px] uppercase tracking-[0.2em] font-bold block mb-1">Scheduled For</span>
+            <p className="text-vintage-tan font-black text-lg sm:text-xl">{format(selectedDate, "EEEE, MMMM d, yyyy")}</p>
+            <p className="text-white/80 font-bold text-sm mt-1">{selectedTime}</p>
+          </div>
+
           <div className="flex justify-between border-b border-white/5 pb-4">
             <span className="text-white/30 text-[9px] uppercase tracking-[0.2em] font-bold">Services</span>
             <span className="text-right text-xs font-bold">{selectedServices.map(s => s.name).join(", ")}</span>
@@ -272,19 +286,21 @@ export default function BookingWizard() {
             <span className="text-xs font-bold">{selectedStaff?.name || "Any Barber"}</span>
           </div>
           <div className="flex justify-between border-b border-white/5 pb-4">
-            <span className="text-white/30 text-[9px] uppercase tracking-[0.2em] font-bold">Time</span>
-            <span className="text-xs font-bold">{format(selectedDate, "MMM d, yyyy")} at {selectedTime}</span>
+            <span className="text-white/30 text-[9px] uppercase tracking-[0.2em] font-bold">Total Duration</span>
+            <span className="text-xs font-bold">{selectedServices.reduce((sum, s) => sum + (s.duration || 0), 0)} mins</span>
           </div>
           <div className="flex justify-between pt-2">
             <span className="text-white/30 text-[9px] uppercase tracking-[0.2em] font-bold">Total</span>
             <span className="text-vintage-tan font-black text-xl">₱{totalAmount.toFixed(2)}</span>
           </div>
         </div>
-        
-        <button 
+
+        {/* Back to Home Button */}
+        <button
           onClick={() => navigate("/")}
-          className="px-8 sm:px-12 bg-vintage-tan text-black py-4 sm:py-5 rounded-full font-black uppercase tracking-[0.3em] text-[9px] sm:text-[10px] hover:bg-white transition-all duration-500 shadow-2xl"
+          className="px-8 sm:px-12 bg-vintage-tan text-black py-4 sm:py-5 rounded-full font-black uppercase tracking-[0.3em] text-[9px] sm:text-[10px] hover:bg-white transition-all duration-500 shadow-2xl flex items-center gap-3"
         >
+          <ChevronLeft size={14} />
           Back to Home
         </button>
       </div>

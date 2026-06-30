@@ -9,6 +9,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import { appointmentAPI } from "../services/appointmentService";
+import { swalConfirm } from "../utils/swal";
 
 // Extracted UI Components
 import { AdminSidebar } from "../features/admin/components/AdminSidebar";
@@ -76,8 +77,16 @@ const AdminLayout = () => {
   };
 
   const handleLogout = async () => {
-    await logout();
-    navigate("/");
+    const result = await swalConfirm({
+      title: 'Sign Out?',
+      text: 'You will be redirected to the home page.',
+      confirmText: 'Yes, sign out',
+      cancelText: 'Stay',
+    });
+    if (result.isConfirmed) {
+      await logout();
+      navigate("/");
+    }
   };
 
   const menuItems = [
