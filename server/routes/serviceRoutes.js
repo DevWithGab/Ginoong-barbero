@@ -11,6 +11,7 @@ const {
 } = require('../controllers/serviceController');
 const { protect, staffOnly } = require('../middleware/authMiddleware');
 const { uploadServicePhoto } = require('../middleware/upload');
+const { validateService, validateMongoId } = require('../middleware/validate');
 
 const router = express.Router();
 
@@ -37,21 +38,21 @@ router.get('/', getServices);
 // @route   POST /api/services
 // @desc    Create new service
 // @access  Private (Staff)
-router.post('/', protect, staffOnly, uploadServicePhoto, createService);
+router.post('/', protect, staffOnly, uploadServicePhoto, validateService, createService);
 
 // @route   GET /api/services/:id
 // @desc    Get single service
 // @access  Public
-router.get('/:id', getService);
+router.get('/:id', validateMongoId, getService);
 
 // @route   PUT /api/services/:id
 // @desc    Update service
 // @access  Private (Staff)
-router.put('/:id', protect, staffOnly, uploadServicePhoto, updateService);
+router.put('/:id', protect, staffOnly, uploadServicePhoto, validateService, updateService);
 
 // @route   DELETE /api/services/:id
 // @desc    Delete service
 // @access  Private (Staff)
-router.delete('/:id', protect, staffOnly, deleteService);
+router.delete('/:id', protect, staffOnly, validateMongoId, deleteService);
 
 module.exports = router;

@@ -9,6 +9,7 @@ const {
 } = require('../controllers/appointmentController');
 const { protect, staffOnly } = require('../middleware/authMiddleware');
 const { createRateLimiter } = require('../middleware/rateLimiter');
+const { validateAppointment, validateAppointmentUpdate, validatePagination } = require('../middleware/validate');
 
 const router = express.Router();
 
@@ -27,12 +28,12 @@ router.get('/available-slots', getAvailableSlots);
 // @route   GET /api/appointments
 // @desc    Get all appointments with filtering
 // @access  Private (Staff)
-router.get('/', protect, staffOnly, getAppointments);
+router.get('/', protect, staffOnly, validatePagination, getAppointments);
 
 // @route   POST /api/appointments
 // @desc    Create new appointment
 // @access  Public (booking)
-router.post('/', bookingLimiter, createAppointment);
+router.post('/', bookingLimiter, validateAppointment, createAppointment);
 
 // @route   GET /api/appointments/:id
 // @desc    Get single appointment

@@ -1,10 +1,12 @@
 const express = require('express');
 const path = require('path');
 const cors = require('cors');
+const helmet = require('helmet');
 const dotenv = require('dotenv');
 const connectDB = require('./configs/db');
 const { notFound, errorHandler } = require('./middleware/errorMiddleware');
 const { addClient } = require('./utils/sse');
+const { createRateLimiter } = require('./middleware/rateLimiter');
 
 // Load environment variables
 dotenv.config();
@@ -14,20 +16,44 @@ connectDB();
 
 const app = express();
 
+// Security headers
+app.use(helmet());
+
+// Rate limiting (100 requests per 15 minutes per IP for general routes)
+const generalLimiter = createRateLimiter({
+  windowMs: 15 * 60 * 1000,
+  maxRequests: 100,
+  message: 'Too many requests. Please try again later.'
+});
+
+// Auth rate limiting (10 attempts per 15 minutes per IP)
+const authLimiter = createRateLimiter({
+  windowMs: 15 * 60 * 1000,
+  maxRequests: 10,
+  message: 'Too many authentication attempts. Please try again later.'
+});
+
 // Middleware
+const allowedOrigins = process.env.CLIENT_URL
+  ? process.env.CLIENT_URL.split(',').map(o => o.trim())
+  : ['http://localhost:5173', 'http://localhost:5174'];
+
 app.use(cors({
-  origin: [process.env.CLIENT_URL || 'http://localhost:5173', 'http://localhost:5174'],
+  origin: allowedOrigins,
   credentials: true
 }));
 
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
+// Apply general rate limiter to all /api routes
+app.use('/api', generalLimiter);
+
 // Serve static files (uploads)
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Routes
-app.use('/api/auth', require('./routes/authRoutes'));
+app.use('/api/auth', authLimiter, require('./routes/authRoutes'));
 app.use('/api/appointments', require('./routes/appointmentRoutes'));
 app.use('/api/customers', require('./routes/customerRoutes'));
 app.use('/api/services', require('./routes/serviceRoutes'));
