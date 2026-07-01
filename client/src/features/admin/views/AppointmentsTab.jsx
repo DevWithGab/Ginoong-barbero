@@ -381,7 +381,7 @@ export const AppointmentsTab = ({
 
                       {/* Barber */}
                       <div className="hidden md:flex items-center gap-3 w-40 shrink-0">
-                        <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${b.barber?.name}`} className="w-8 h-8 rounded-full border border-[#efefef] bg-[#f4f4f5] shrink-0" alt="" aria-hidden="true" />
+                        <img src={b.barber?.profileImage || `https://api.dicebear.com/7.x/avataaars/svg?seed=${b.barber?.name}`} className="w-8 h-8 rounded-full border border-[#efefef] bg-[#f4f4f5] shrink-0" alt="" aria-hidden="true" />
                         <p className="text-[12px] font-bold text-[#a1a1aa] truncate">{b.barber?.name}</p>
                       </div>
                     </div>
@@ -393,7 +393,7 @@ export const AppointmentsTab = ({
                         <span className="font-medium">{b.service?.name} · {b.duration} mins</span>
                       </div>
                       <div className="flex items-center gap-2 text-[11px] text-[#a1a1aa]">
-                        <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${b.barber?.name}`} className="w-5 h-5 rounded-full border border-[#efefef]" alt="" />
+                        <img src={b.barber?.profileImage || `https://api.dicebear.com/7.x/avataaars/svg?seed=${b.barber?.name}`} className="w-5 h-5 rounded-full border border-[#efefef]" alt="" />
                         <span className="font-medium">{b.barber?.name}</span>
                       </div>
                     </div>
@@ -689,7 +689,7 @@ export const AppointmentsTab = ({
                   <div className="bg-[#fbfcfa] border border-[#efefef] rounded-lg p-5">
                     <div className="flex items-center gap-4">
                       <div className="w-12 h-12 rounded-full overflow-hidden bg-[#f4f4f5] border border-[#efefef]">
-                        <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${selectedAppointment.barber?.name}`} alt="" />
+                        <img src={selectedAppointment.barber?.profileImage || `https://api.dicebear.com/7.x/avataaars/svg?seed=${selectedAppointment.barber?.name}`} alt="" />
                       </div>
                       <div>
                         <p className="text-[14px] font-bold text-[#18181b]">{selectedAppointment.barber?.name}</p>
