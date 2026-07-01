@@ -2,8 +2,6 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Menu } from 'lucide-react';
-import { useAuth } from '../../../../hooks/useAuth';
-import { useAppointments } from '../../../../hooks/useAPI';
 import { NavLogo } from './NavLogo';
 import { NavLinks } from './NavLinks';
 import { NavActions } from './NavActions';
@@ -15,14 +13,6 @@ export function LandingNavbar({ onBookNow }) {
   const [scrollProgress, setScrollProgress] = useState(0);
   
   const navigate = useNavigate();
-  const { user, logout, isAuthenticated, isAdmin } = useAuth();
-
-  const { data: pendingAppointments } = useAppointments(
-    isAuthenticated && isAdmin ? { status: 'Pending', limit: 5 } : null
-  );
-
-  const pendingCount = pendingAppointments?.data?.length || 0;
-  const todayAppointments = 0;
 
   useEffect(() => {
     const handleScroll = () => {
@@ -47,16 +37,6 @@ export function LandingNavbar({ onBookNow }) {
     }
     return () => { document.body.style.overflow = ''; };
   }, [isMenuOpen]);
-
-  const handleLogout = async () => {
-    try {
-      await logout();
-      navigate('/');
-    } catch (error) {
-      console.error('Logout error:', error);
-      navigate('/');
-    }
-  };
 
   return (
     <>
@@ -121,14 +101,8 @@ export function LandingNavbar({ onBookNow }) {
 
               {/* Right: Actions */}
               <div className="flex justify-end items-center min-w-0">
-                <NavActions 
-                  isAuthenticated={isAuthenticated}
-                  user={user}
-                  isAdmin={isAdmin}
-                  pendingCount={pendingCount}
-                  todayAppointments={todayAppointments}
+                <NavActions
                   onBookNow={onBookNow}
-                  onLogout={handleLogout}
                   layout="desktop"
                 />
 
@@ -170,15 +144,6 @@ export function LandingNavbar({ onBookNow }) {
                       </motion.div>
                     )}
                   </AnimatePresence>
-                  
-                  {/* Pending badge */}
-                  {isAuthenticated && isAdmin && pendingCount > 0 && (
-                    <div className="absolute -top-1 -right-1 w-4 h-4 bg-orange-500 rounded-full flex items-center justify-center ring-2 ring-vintage-charcoal">
-                      <span className="text-[7px] font-bold text-white">
-                        {pendingCount > 9 ? '9+' : pendingCount}
-                      </span>
-                    </div>
-                  )}
                 </motion.button>
               </div>
             </div>
@@ -187,16 +152,10 @@ export function LandingNavbar({ onBookNow }) {
       </nav>
 
       {/* Mobile Menu */}
-      <MobileMenu 
+      <MobileMenu
         isOpen={isMenuOpen}
         onClose={() => setIsMenuOpen(false)}
-        isAuthenticated={isAuthenticated}
-        user={user}
-        isAdmin={isAdmin}
-        pendingCount={pendingCount}
-        todayAppointments={todayAppointments}
         onBookNow={onBookNow}
-        onLogout={handleLogout}
       />
     </>
   );

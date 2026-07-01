@@ -1,6 +1,6 @@
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Shield, LogOut, Calendar, Bell, Settings } from 'lucide-react';
+import { Shield } from 'lucide-react';
 
 const InstagramIcon = ({ size = 14, ...props }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
@@ -16,15 +16,9 @@ const FacebookIcon = ({ size = 14, ...props }) => (
   </svg>
 );
 
-export function NavActions({ 
-  isAuthenticated, 
-  user, 
-  isAdmin,
-  pendingCount = 0,
-  todayAppointments = 0,
+export function NavActions({
   onBookNow,
-  onLogout,
-  layout = 'desktop' 
+  layout = 'desktop'
 }) {
   const navigate = useNavigate();
   const location = useLocation();
@@ -42,43 +36,13 @@ export function NavActions({
   if (layout === 'mobile') {
     return (
       <div className="flex flex-col gap-4 mt-auto pt-8">
-        {isAuthenticated ? (
-          <div className="flex justify-between items-center bg-white/[0.03] border border-white/5 rounded-2xl p-4">
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-full bg-gradient-to-br from-vintage-tan to-vintage-tan/70 flex items-center justify-center text-vintage-charcoal font-black text-xs shrink-0">
-                {user?.name ? user.name[0].toUpperCase() : user?.email ? user.email[0].toUpperCase() : "U"}
-              </div>
-              <div className="flex flex-col min-w-0">
-                <span className="text-white/90 text-[10px] uppercase font-bold tracking-wider truncate max-w-[120px]">
-                  {user?.name || "User"}
-                </span>
-                <span className="text-white/25 text-[8px] truncate max-w-[120px]">
-                  {user?.email}
-                </span>
-                {(user?.role === 'admin') && (
-                  <span className="text-vintage-tan/80 text-[7px] font-bold uppercase tracking-wider mt-0.5">
-                    {user?.role}
-                  </span>
-                )}
-              </div>
-            </div>
-            <button 
-              onClick={() => onLogout?.()}
-              className="bg-white/5 hover:bg-red-500/10 text-white/40 hover:text-red-400 py-2 px-3 rounded-xl text-[8px] font-bold uppercase tracking-widest transition-all cursor-pointer shrink-0"
-            >
-              Sign Out
-            </button>
-          </div>
-        ) : (
-          <Link 
-            to="/admin/login" 
-            onClick={onClose}
-            className="flex items-center justify-center gap-2.5 py-3 text-[8px] font-bold uppercase tracking-[0.4em] text-white/20 hover:text-vintage-tan transition-colors border border-white/5 rounded-xl hover:border-vintage-tan/20"
-          >
-            <Shield size={12} />
-            Admin Access
-          </Link>
-        )}
+        <Link
+          to="/admin/login"
+          className="flex items-center justify-center gap-2.5 py-3 text-[8px] font-bold uppercase tracking-[0.4em] text-white/20 hover:text-vintage-tan transition-colors border border-white/5 rounded-xl hover:border-vintage-tan/20"
+        >
+          <Shield size={12} />
+          Admin Access
+        </Link>
 
         <motion.button
           whileTap={{ scale: 0.98 }}
@@ -154,76 +118,17 @@ export function NavActions({
         </a>
       </div>
       
-      {/* Admin Indicators */}
-      {isAuthenticated && isAdmin && (
-        <div className="hidden lg:flex items-center gap-2 ml-1">
-          <div className="flex items-center gap-1.5 bg-white/[0.03] border border-white/5 rounded-full px-3 py-1.5">
-            <Calendar size={11} className="text-white/30" />
-            <span className="text-[9px] font-bold text-white/50">
-              {todayAppointments}
-            </span>
-          </div>
-
-          {pendingCount > 0 && (
-            <button 
-              onClick={() => navigate('/admin/appointments')}
-              className="flex items-center gap-1.5 bg-orange-500/5 border border-orange-500/10 rounded-full px-3 py-1.5 hover:bg-orange-500/10 transition-colors"
-            >
-              <Bell size={11} className="text-orange-400/70" />
-              <span className="text-[9px] font-bold text-orange-400/80">
-                {pendingCount}
-              </span>
-            </button>
-          )}
-
-          {isAdmin && (
-            <Link
-              to="/admin/settings"
-              className="p-2 text-white/30 hover:text-vintage-tan transition-colors rounded-full hover:bg-white/[0.05]"
-            >
-              <Settings size={12} />
-            </Link>
-          )}
-        </div>
-      )}
-      
       {/* Divider */}
       <div className="w-px h-4 bg-white/5 mx-1"></div>
 
-      {/* User Info or Login */}
-      {isAuthenticated ? (
-        <div className="hidden lg:flex items-center gap-2.5 bg-white/[0.03] border border-white/5 rounded-full pl-3 pr-1.5 py-1.5">
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-full bg-gradient-to-br from-vintage-tan to-vintage-tan/70 flex items-center justify-center text-vintage-charcoal font-black text-[7px] tracking-tight shrink-0">
-              {user?.name ? user.name[0].toUpperCase() : user?.email ? user.email[0].toUpperCase() : "U"}
-            </div>
-            <span className="text-[9px] font-bold uppercase tracking-wider text-white/60 max-w-[80px] truncate">
-              {user?.name || user?.email}
-            </span>
-            {(user?.role === 'admin') && (
-              <span className="px-1.5 py-0.5 bg-vintage-tan/10 text-vintage-tan/70 rounded text-[6px] font-bold uppercase tracking-wider">
-                {user?.role}
-              </span>
-            )}
-          </div>
-          <button 
-            onClick={onLogout}
-            className="w-7 h-7 rounded-full bg-white/[0.03] hover:bg-red-500/10 text-white/30 hover:text-red-400 flex items-center justify-center transition-all cursor-pointer"
-            title="Sign Out"
-            aria-label="Sign Out"
-          >
-            <LogOut size={10} />
-          </button>
-        </div>
-      ) : (
-        <Link
-          to="/admin/login"
-          className="hidden lg:flex items-center gap-2 px-3 py-2 text-[8px] font-bold uppercase tracking-[0.3em] text-white/40 hover:text-vintage-tan/70 transition-colors rounded-full hover:bg-white/[0.05]"
-        >
-          <Shield size={11} />
-          Admin
-        </Link>
-      )}
+      {/* Admin Login */}
+      <Link
+        to="/admin/login"
+        className="hidden lg:flex items-center gap-2 px-3 py-2 text-[8px] font-bold uppercase tracking-[0.3em] text-white/40 hover:text-vintage-tan/70 transition-colors rounded-full hover:bg-white/[0.05]"
+      >
+        <Shield size={11} />
+        Admin
+      </Link>
 
       {/* Divider */}
       <div className="w-px h-4 bg-white/5 mx-1"></div>

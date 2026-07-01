@@ -16,16 +16,10 @@ const FacebookIcon = ({ size = 16, ...props }) => (
   </svg>
 );
 
-export function MobileMenu({ 
-  isOpen, 
-  onClose, 
-  isAuthenticated, 
-  user, 
-  isAdmin,
-  pendingCount = 0,
-  todayAppointments = 0,
+export function MobileMenu({
+  isOpen,
+  onClose,
   onBookNow,
-  onLogout 
 }) {
   const navigate = useNavigate();
   const location = useLocation();
@@ -44,16 +38,6 @@ export function MobileMenu({
     { name: 'Services', href: '/services' },
     { name: 'Gallery', href: '/gallery' },
     { name: 'Barbers', href: '/barbers' },
-  ];
-
-  const adminLinks = [
-    { name: 'Dashboard', href: '/admin', roles: ['admin'] },
-    { name: 'Appointments', href: '/admin/appointments', roles: ['admin'] },
-    { name: 'Customers', href: '/admin/customers', roles: ['admin'] },
-    { name: 'Services', href: '/admin/services', roles: ['admin'] },
-    { name: 'Barbers', href: '/admin/barbers', roles: ['admin'] },
-    { name: 'Gallery', href: '/admin/gallery', roles: ['admin'] },
-    { name: 'Settings', href: '/admin/settings', roles: ['admin'] },
   ];
 
   const isActive = (href) => {
@@ -100,20 +84,6 @@ export function MobileMenu({
                   <span className="text-[7px] text-white/20 uppercase tracking-[0.3em] block pl-3.5">
                     Premium Grooming
                   </span>
-
-                  {/* Mobile Admin Stats */}
-                  {isAuthenticated && isAdmin && (
-                    <div className="flex gap-2 mt-3 pl-3.5 flex-wrap">
-                      <div className="bg-white/[0.03] border border-white/5 px-2.5 py-1 rounded-lg text-[7px] text-white/40 font-bold">
-                        Today: {todayAppointments}
-                      </div>
-                      {pendingCount > 0 && (
-                        <div className="bg-orange-500/5 border border-orange-500/10 px-2.5 py-1 rounded-lg text-[7px] text-orange-400/70 font-bold">
-                          Pending: {pendingCount}
-                        </div>
-                      )}
-                    </div>
-                  )}
                 </div>
 
                 <motion.button 
@@ -170,39 +140,6 @@ export function MobileMenu({
                   </div>
                 </div>
 
-                {/* Admin Menu */}
-                {isAuthenticated && isAdmin && (
-                  <div>
-                    <span className="text-[7px] font-bold text-white/15 uppercase tracking-[0.6em] block mb-5">
-                      Admin
-                    </span>
-                    <div className="space-y-0.5">
-                      {adminLinks
-                        .filter(link => link.roles.includes(user?.role))
-                        .map((link, idx) => (
-                          <motion.div
-                            key={link.name}
-                            initial={{ opacity: 0, x: 30 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: 0.05 * (idx + 4) }}
-                          >
-                            <Link 
-                              to={link.href}
-                              onClick={onClose}
-                              className="flex items-center gap-3 py-2.5 text-sm font-serif font-bold text-white/40 hover:text-vintage-tan transition-all duration-300 group"
-                            >
-                              <span className="w-1 h-1 rounded-full bg-white/10 group-hover:bg-vintage-tan/60 transition-colors"></span>
-                              <span className="uppercase tracking-wider group-hover:translate-x-1 transition-transform duration-300">
-                                {link.name}
-                              </span>
-                            </Link>
-                          </motion.div>
-                        ))
-                      }
-                    </div>
-                  </div>
-                )}
-
                 {/* Quick Contact */}
                 <div>
                   <span className="text-[7px] font-bold text-white/15 uppercase tracking-[0.6em] block mb-5">
@@ -254,43 +191,14 @@ export function MobileMenu({
 
               {/* Footer Actions */}
               <div className="px-8 pb-8 pt-6 border-t border-white/5 space-y-4">
-                {isAuthenticated ? (
-                  <div className="flex items-center justify-between bg-white/[0.02] border border-white/5 rounded-xl p-3.5">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-vintage-tan to-vintage-tan/70 flex items-center justify-center text-vintage-charcoal font-black text-[9px] shrink-0">
-                        {user?.name ? user.name[0].toUpperCase() : user?.email ? user.email[0].toUpperCase() : "U"}
-                      </div>
-                      <div className="flex flex-col min-w-0">
-                        <span className="text-white/80 text-[9px] uppercase font-bold tracking-wider truncate max-w-[100px]">
-                          {user?.name || "User"}
-                        </span>
-                        {(user?.role === 'admin') && (
-                          <span className="text-vintage-tan/60 text-[7px] font-bold uppercase tracking-wider">
-                            {user?.role}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                    <button 
-                      onClick={() => {
-                        onLogout?.();
-                        onClose?.();
-                      }}
-                      className="bg-white/[0.03] hover:bg-red-500/10 text-white/30 hover:text-red-400 py-2 px-3 rounded-lg text-[8px] font-bold uppercase tracking-widest transition-all cursor-pointer shrink-0"
-                    >
-                      Sign Out
-                    </button>
-                  </div>
-                ) : (
-                  <Link 
-                    to="/admin/login" 
-                    onClick={onClose}
-                    className="flex items-center justify-center gap-2 py-3 text-[8px] font-bold uppercase tracking-[0.3em] text-white/20 hover:text-vintage-tan transition-colors border border-white/5 rounded-xl hover:border-vintage-tan/20"
-                  >
-                    <Shield size={11} />
-                    Admin Access
-                  </Link>
-                )}
+                <Link
+                  to="/admin/login"
+                  onClick={onClose}
+                  className="flex items-center justify-center gap-2 py-3 text-[8px] font-bold uppercase tracking-[0.3em] text-white/20 hover:text-vintage-tan transition-colors border border-white/5 rounded-xl hover:border-vintage-tan/20"
+                >
+                  <Shield size={11} />
+                  Admin Access
+                </Link>
 
                 <motion.button
                   whileTap={{ scale: 0.98 }}

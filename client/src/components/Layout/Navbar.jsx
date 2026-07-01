@@ -5,13 +5,7 @@ import {
   Menu, 
   X, 
   Shield,
-  LogOut,
-  User as UserIcon,
-  Calendar,
-  Bell,
-  Settings
 } from "lucide-react";
-import { useDashboardMetrics, useAppointments } from "../../hooks/useAPI";
 import { useAuth } from "../../hooks/useAuth";
 import { useLenis } from "lenis/react";
 import logo from "../../assets/logo/ginoong-barbero_LOGO.png";
@@ -39,38 +33,12 @@ export function Navbar({ onBookNow }) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [scrollProgress, setScrollProgress] = useState(0);
-  const [notifications, setNotifications] = useState([]);
   const navigate = useNavigate();
   const location = useLocation();
   const lenis = useLenis();
 
   // Real authentication hook
-  const { user, logout, isAuthenticated, isAdmin } = useAuth();
-
-  // Backend data hooks (only fetch if authenticated and user is admin)
-  const shouldFetch = isAuthenticated && isAdmin;
-  const { data: dashboardMetrics, loading: metricsLoading } = useDashboardMetrics(shouldFetch);
-  const { data: pendingAppointments } = useAppointments(shouldFetch ? { 
-    status: 'Pending', 
-    limit: 5 
-  } : null);
-
-  const todayAppointments = dashboardMetrics?.data?.todayAppointments ?? 0;
-  const pendingCount = pendingAppointments?.data?.length ?? 0;
-
-  useEffect(() => {
-    // Set up notifications from pending appointments (only for staff)
-    if (pendingAppointments?.data && isAuthenticated && isAdmin) {
-      const newNotifications = pendingAppointments.data.map(appointment => ({
-        id: appointment._id,
-        type: 'appointment',
-        message: `New booking from ${appointment.customer.name}`,
-        time: new Date(appointment.createdAt).toLocaleTimeString(),
-        unread: true
-      }));
-      setNotifications(newNotifications);
-    }
-  }, [pendingAppointments, isAuthenticated, isAdmin]);
+  const { user, logout, isAuthenticated } = useAuth();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -87,17 +55,6 @@ export function Navbar({ onBookNow }) {
       window.removeEventListener("scroll", handleScroll);
     };
   }, []);
-
-  const handleSignOut = async () => {
-    try {
-      await logout();
-      navigate('/');
-    } catch (error) {
-      console.error('Logout error:', error);
-      // Force logout even if API call fails
-      navigate('/');
-    }
-  };
 
   const handleBookNow = () => {
     if (onBookNow) {
@@ -231,77 +188,13 @@ export function Navbar({ onBookNow }) {
                 </a>
               </div>
               
-              {/* Admin Dashboard Indicators */}
-              {isAuthenticated && isAdmin && (
-                <div className="hidden lg:flex items-center gap-3">
-                  {/* Today's Appointments Indicator */}
-                  <div className="flex items-center gap-2 bg-blue-500/10 border border-blue-500/20 rounded-full px-3 py-1.5">
-                    <Calendar size={12} className="text-blue-400" />
-                    <span className="text-[9px] font-bold text-blue-400">
-                      {metricsLoading ? '...' : todayAppointments}
-                    </span>
-                  </div>
-
-                  {/* Pending Notifications */}
-                  {pendingCount > 0 && (
-                    <div className="relative">
-                      <button 
-                        onClick={() => navigate('/admin/appointments')}
-                        className="flex items-center gap-2 bg-orange-500/10 border border-orange-500/20 rounded-full px-3 py-1.5 hover:bg-orange-500/20 transition-colors"
-                        title={`${pendingCount} pending appointments`}
-                      >
-                        <Bell size={12} className="text-orange-400" />
-                        <span className="text-[9px] font-bold text-orange-400">
-                          {pendingCount}
-                        </span>
-                      </button>
-                    </div>
-                  )}
-
-                  {/* Admin Settings */}
-                  {isAdmin && (
-                    <Link
-                      to="/admin/settings"
-                      className="p-2 text-white/20 hover:text-vintage-tan transition-colors rounded-full hover:bg-white/5"
-                      title="Admin Settings"
-                    >
-                      <Settings size={12} />
-                    </Link>
-                  )}
-                </div>
-              )}
-              
-              {isAuthenticated ? (
-                <div className="hidden lg:flex items-center gap-3 bg-white/5 border border-white/10 rounded-full pl-4 pr-1.5 py-1.5 font-bold text-[9px] uppercase tracking-wider text-white">
-                  <div className="flex items-center gap-2">
-                    <div className="w-5 h-5 rounded-full bg-vintage-tan text-black flex items-center justify-center font-black text-[8px] tracking-tight shrink-0">
-                      {user?.name ? user.name[0].toUpperCase() : user?.email ? user.email[0].toUpperCase() : "U"}
-                    </div>
-                    <span className="text-white/70 max-w-[100px] truncate">
-                      {user?.name || user?.email}
-                    </span>
-                    <span className="px-2 py-0.5 bg-vintage-tan/20 text-vintage-tan rounded text-[7px] font-bold uppercase">
-                      {user?.role}
-                    </span>
-                  </div>
-                  <button 
-                    onClick={handleSignOut}
-                    className="w-7 h-7 rounded-full bg-white/5 hover:bg-red-500/10 hover:text-red-400 flex items-center justify-center transition-all cursor-pointer"
-                    title="Sign Out"
-                    aria-label="Sign Out"
-                  >
-                    <LogOut size={11} />
-                  </button>
-                </div>
-              ) : (
-                <Link
-                  to="/admin/login"
-                  className="hidden lg:flex items-center gap-2 text-[9px] font-bold uppercase tracking-[0.3em] text-white/40 hover:text-vintage-tan transition-colors"
-                >
-                  <Shield size={12} />
-                  Admin Login
-                </Link>
-              )}
+              <Link
+                to="/admin/login"
+                className="hidden lg:flex items-center gap-2 text-[9px] font-bold uppercase tracking-[0.3em] text-white/40 hover:text-vintage-tan transition-colors"
+              >
+                <Shield size={12} />
+                Admin
+              </Link>
 
               <motion.button 
                 whileHover={{ scale: 1.02, backgroundColor: "var(--vintage-tan)", color: "var(--vintage-charcoal)" }}
@@ -323,13 +216,6 @@ export function Navbar({ onBookNow }) {
                   className="text-white p-2.5 bg-white/5 rounded-full hover:bg-white/10 transition-colors border border-white/5 relative"
                 >
                   <Menu size={20} />
-                  {isAuthenticated && isAdmin && pendingCount > 0 && (
-                    <div className="absolute -top-1 -right-1 w-4 h-4 bg-orange-500 rounded-full flex items-center justify-center">
-                      <span className="text-[8px] font-bold text-white">
-                        {pendingCount > 9 ? '9+' : pendingCount}
-                      </span>
-                    </div>
-                  )}
                 </motion.button>
               </div>
             </div>
@@ -359,22 +245,6 @@ export function Navbar({ onBookNow }) {
                 <div className="flex flex-col gap-1">
                   <span className="text-vintage-tan text-[10px] font-bold uppercase tracking-[0.4em] font-slab italic">{BUSINESS_INFO.name}</span>
                   <span className="text-[8px] text-white/30 uppercase tracking-[0.2em]">Crafting Excellence</span>
-                  {/* Mobile Admin Stats */}
-                  {isAuthenticated && isAdmin && (
-                    <div className="flex gap-2 mt-2">
-                      <div className="bg-blue-500/10 px-2 py-1 rounded text-[8px] text-blue-400">
-                        Today: {todayAppointments}
-                      </div>
-                      {pendingCount > 0 && (
-                        <div className="bg-orange-500/10 px-2 py-1 rounded text-[8px] text-orange-400">
-                          Pending: {pendingCount}
-                        </div>
-                      )}
-                      <div className="bg-vintage-tan/10 px-2 py-1 rounded text-[8px] text-vintage-tan">
-                        {user?.role}
-                      </div>
-                    </div>
-                  )}
                 </div>
                 <motion.button 
                   whileHover={{ rotate: 90 }}
@@ -412,38 +282,6 @@ export function Navbar({ onBookNow }) {
                   ))}
                 </div>
 
-                {/* Admin Menu Section */}
-                {isAuthenticated && isAdmin && (
-                  <div className="space-y-6">
-                    <span className="text-[9px] font-bold text-white/20 uppercase tracking-[0.4em] block mb-4 border-b border-white/5 pb-2">
-                      Admin Panel
-                    </span>
-                    {[
-                    { name: 'Dashboard', href: '/admin', roles: ['admin'] },
-                    { name: 'Appointments', href: '/admin/appointments', roles: ['admin'] },
-                    { name: 'Customers', href: '/admin/customers', roles: ['admin'] },
-                      { name: 'Services', href: '/admin/services', roles: ['admin'] },
-                      { name: 'Barbers', href: '/admin/barbers', roles: ['admin'] },
-                      { name: 'Settings', href: '/admin/settings', roles: ['admin'] },
-                    ].filter(link => link.roles.includes(user?.role)).map((link, idx) => (
-                      <motion.div
-                        key={link.name}
-                        initial={{ opacity: 0, x: 20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: 0.1 * (idx + 4) }}
-                      >
-                        <Link 
-                          to={link.href}
-                          onClick={() => setIsMenuOpen(false)}
-                          className="text-lg font-serif font-bold text-white/70 hover:text-vintage-tan transition-all duration-500 uppercase tracking-tighter block group"
-                        >
-                          <span className="inline-block group-hover:translate-x-2 transition-transform duration-500">{link.name}</span>
-                        </Link>
-                      </motion.div>
-                    ))}
-                  </div>
-                )}
-
                 <div className="space-y-6 mt-4">
                   <span className="text-[9px] font-bold text-white/20 uppercase tracking-[0.4em] block mb-4 border-b border-white/5 pb-2">Connect</span>
                   <div className="flex flex-col gap-5">
@@ -472,44 +310,14 @@ export function Navbar({ onBookNow }) {
               </div>
 
               <div className="mt-auto pt-10 space-y-6">
-                {isAuthenticated ? (
-                  <div className="flex justify-between items-center bg-white/5 border border-white/5 rounded-2xl p-4 font-bold text-xs text-white">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-vintage-tan text-black flex items-center justify-center font-black text-xs shrink-0">
-                        {user?.name ? user.name[0].toUpperCase() : user?.email ? user.email[0].toUpperCase() : "U"}
-                      </div>
-                      <div className="flex flex-col min-w-0">
-                        <span className="text-white/90 text-[10px] uppercase font-bold tracking-wider truncate max-w-[120px]">
-                          {user?.name || "User"}
-                        </span>
-                        <span className="text-white/30 text-[9px] truncate max-w-[120px] font-mono">
-                          {user?.email}
-                        </span>
-                        <span className="text-vintage-tan text-[8px] font-bold uppercase">
-                          {user?.role}
-                        </span>
-                      </div>
-                    </div>
-                    <button 
-                      onClick={() => {
-                        handleSignOut();
-                        setIsMenuOpen(false);
-                      }}
-                      className="bg-red-500/10 hover:bg-red-500/20 text-red-400 py-2 px-3 rounded-xl text-[9px] font-bold uppercase tracking-widest transition-colors cursor-pointer shrink-0"
-                    >
-                      Sign Out
-                    </button>
-                  </div>
-                ) : (
-                  <Link 
-                    to="/admin/login" 
-                    onClick={() => setIsMenuOpen(false)}
-                    className="flex items-center justify-center gap-2 text-[9px] font-bold uppercase tracking-[0.3em] text-white/20 hover:text-vintage-tan transition-colors mb-4"
-                  >
-                    <Shield size={12} />
-                    Admin Login
-                  </Link>
-                )}
+                <Link
+                  to="/admin/login"
+                  onClick={() => setIsMenuOpen(false)}
+                  className="flex items-center justify-center gap-2 text-[9px] font-bold uppercase tracking-[0.3em] text-white/20 hover:text-vintage-tan transition-colors mb-4"
+                >
+                  <Shield size={12} />
+                  Admin Login
+                </Link>
                 <motion.button
                   whileTap={{ scale: 0.98 }}
                   onClick={() => {
