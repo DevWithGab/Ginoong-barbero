@@ -35,9 +35,9 @@ export const appointmentAPI = {
   },
 
   // Get available time slots for booking
-  getAvailableSlots: async (date, barberId) => {
+  getAvailableSlots: async (date, barberId, tzOffset) => {
     const response = await api.get('/appointments/available-slots', {
-      params: { date, barberId }
+      params: { date, barberId, tzOffset }
     });
     return response.data;
   },

@@ -178,7 +178,7 @@ const getAppointments = asyncHandler(async (req, res) => {
 // @route   GET /api/appointments/available-slots
 // @access  Public
 const getAvailableSlots = asyncHandler(async (req, res) => {
-  const { date, barberId } = req.query;
+  const { date, barberId, tzOffset } = req.query;
 
   if (!date) {
     res.status(400);
@@ -186,6 +186,9 @@ const getAvailableSlots = asyncHandler(async (req, res) => {
   }
 
   const [year, month, day] = date.split('-').map(Number);
+
+  // Use provided timezone offset (minutes from UTC) or default to PHT (+8 = -480)
+  const offsetMinutes = tzOffset ? parseInt(tzOffset) : -480;
 
   const filter = {
     status: { $in: ['Confirmed'] }
@@ -197,12 +200,6 @@ const getAvailableSlots = asyncHandler(async (req, res) => {
 
   const existingAppointments = await Appointment.find(filter).populate('service', 'duration');
 
-  // Filter to only appointments on the target date (compare date parts)
-  const targetAppointments = existingAppointments.filter(apt => {
-    const d = new Date(apt.dateTime);
-    return d.getFullYear() === year && d.getMonth() === month - 1 && d.getDate() === day;
-  });
-
   // All time slots (matching the frontend list)
   const allSlots = [
     "09:00 AM", "09:30 AM", "10:00 AM", "10:30 AM", "11:00 AM", "11:30 AM",
@@ -210,15 +207,23 @@ const getAvailableSlots = asyncHandler(async (req, res) => {
     "04:00 PM", "04:30 PM", "05:00 PM", "05:30 PM"
   ];
 
-  // Build time ranges from existing appointments
-  const bookedTimeRanges = targetAppointments.map(apt => {
-    const aptDate = new Date(apt.dateTime);
-    const start = new Date(aptDate.getFullYear(), aptDate.getMonth(), aptDate.getDate(), aptDate.getHours(), aptDate.getMinutes(), 0, 0);
+  // Build booked time ranges from confirmed appointments on the target date
+  // Convert each appointment's UTC stored time to local time for comparison
+  const bookedTimeRanges = existingAppointments.filter(apt => {
+    const aptLocal = new Date(apt.dateTime.getTime() - offsetMinutes * 60000);
+    return aptLocal.getUTCFullYear() === year &&
+           aptLocal.getUTCMonth() === month - 1 &&
+           aptLocal.getUTCDate() === day;
+  }).map(apt => {
+    const aptLocal = new Date(apt.dateTime.getTime() - offsetMinutes * 60000);
+    const start = new Date(Date.UTC(year, month - 1, day, aptLocal.getUTCHours(), aptLocal.getUTCMinutes(), 0, 0));
     const end = new Date(start.getTime() + (apt.duration * 60000));
     return { start, end };
   });
 
-  const now = new Date();
+  // Current time in user's local timezone
+  const nowUTC = Date.now();
+  const nowLocal = new Date(nowUTC - offsetMinutes * 60000);
 
   const availableSlots = allSlots.map(time => {
     const [timePart, period] = time.split(' ');
@@ -226,15 +231,20 @@ const getAvailableSlots = asyncHandler(async (req, res) => {
     if (period === 'PM' && hours !== 12) hours += 12;
     if (period === 'AM' && hours === 12) hours = 0;
 
-    const slotStart = new Date(year, month - 1, day, hours, minutes, 0, 0);
+    const slotStart = new Date(Date.UTC(year, month - 1, day, hours, minutes, 0, 0));
     const slotEnd = new Date(slotStart.getTime() + 30 * 60000);
 
-    // Skip past times
-    if (slotStart <= now) {
+    const nowSlot = new Date(Date.UTC(
+      nowLocal.getUTCFullYear(), nowLocal.getUTCMonth(), nowLocal.getUTCDate(),
+      nowLocal.getUTCHours(), nowLocal.getUTCMinutes(), 0, 0
+    ));
+
+    // Disable past time slots
+    if (slotStart <= nowSlot) {
       return { time, available: false, reason: 'past' };
     }
 
-    // Check if slot conflicts with any existing appointment
+    // Disable slots overlapping confirmed bookings for the selected barber
     const isBooked = bookedTimeRanges.some(range => {
       return slotStart < range.end && slotEnd > range.start;
     });

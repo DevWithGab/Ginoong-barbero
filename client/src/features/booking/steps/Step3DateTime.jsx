@@ -27,13 +27,14 @@ export function Step3DateTime({
 
   useEffect(() => {
     if (!selectedDate) return;
-    
+
     const fetchSlots = async () => {
       setLoadingSlots(true);
       try {
         const dateStr = format(selectedDate, 'yyyy-MM-dd');
         const barberId = selectedStaff?._id || selectedStaff?.id || '';
-        const res = await appointmentAPI.getAvailableSlots(dateStr, barberId || undefined);
+        const tzOffset = new Date().getTimezoneOffset();
+        const res = await appointmentAPI.getAvailableSlots(dateStr, barberId || undefined, tzOffset);
         setAvailableSlots(res.data || []);
       } catch (err) {
         console.error('Failed to fetch available slots:', err);
