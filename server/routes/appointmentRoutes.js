@@ -13,10 +13,10 @@ const { validateAppointment, validateAppointmentUpdate, validatePagination } = r
 
 const router = express.Router();
 
-// Rate limit: 5 bookings per 15 minutes per IP
+// Rate limit: 15 bookings per 15 minutes per IP
 const bookingLimiter = createRateLimiter({
   windowMs: 15 * 60 * 1000,
-  maxRequests: 5,
+  maxRequests: 15,
   message: 'Too many booking attempts. Please wait before trying again.'
 });
 

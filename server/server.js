@@ -54,7 +54,7 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Routes - auth uses its own limiter, NOT the general one
 app.use('/api/auth', authLimiter, require('./routes/authRoutes'));
-app.use('/api/appointments', generalLimiter, require('./routes/appointmentRoutes'));
+app.use('/api/appointments', require('./routes/appointmentRoutes'));
 app.use('/api/customers', generalLimiter, require('./routes/customerRoutes'));
 app.use('/api/services', generalLimiter, require('./routes/serviceRoutes'));
 app.use('/api/barbers', generalLimiter, require('./routes/barberRoutes'));
