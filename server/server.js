@@ -16,6 +16,9 @@ connectDB();
 
 const app = express();
 
+// Trust first proxy (needed for correct req.ip behind Render's proxy)
+app.set('trust proxy', 1);
+
 // Security headers
 app.use(helmet());
 
@@ -26,10 +29,10 @@ const generalLimiter = createRateLimiter({
   message: 'Too many requests. Please try again later.'
 });
 
-// Auth rate limiting (10 attempts per 15 minutes per IP)
+// Auth rate limiting (20 attempts per 15 minutes per IP)
 const authLimiter = createRateLimiter({
   windowMs: 15 * 60 * 1000,
-  maxRequests: 10,
+  maxRequests: 20,
   message: 'Too many authentication attempts. Please try again later.'
 });
 
