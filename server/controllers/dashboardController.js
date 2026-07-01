@@ -402,7 +402,7 @@ const getTodaySchedule = asyncHandler(async (req, res) => {
   })
     .populate('customer', 'name phone isVIP picture')
     .populate('service', 'name duration category')
-    .populate('barber', 'name role')
+    .populate('barber', 'name role profileImage')
     .sort({ dateTime: 1 });
 
   // Group appointments by barber
