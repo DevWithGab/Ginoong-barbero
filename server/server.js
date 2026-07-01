@@ -29,10 +29,10 @@ const generalLimiter = createRateLimiter({
   message: 'Too many requests. Please try again later.'
 });
 
-// Auth rate limiting (20 attempts per 15 minutes per IP)
+// Auth rate limiting (50 attempts per 15 minutes per IP - higher for shared proxy IPs)
 const authLimiter = createRateLimiter({
   windowMs: 15 * 60 * 1000,
-  maxRequests: 20,
+  maxRequests: 50,
   message: 'Too many authentication attempts. Please try again later.'
 });
 
@@ -49,20 +49,17 @@ app.use(cors({
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Apply general rate limiter to all /api routes
-app.use('/api', generalLimiter);
-
 // Serve static files (uploads)
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// Routes
+// Routes - auth uses its own limiter, NOT the general one
 app.use('/api/auth', authLimiter, require('./routes/authRoutes'));
-app.use('/api/appointments', require('./routes/appointmentRoutes'));
-app.use('/api/customers', require('./routes/customerRoutes'));
-app.use('/api/services', require('./routes/serviceRoutes'));
-app.use('/api/barbers', require('./routes/barberRoutes'));
-app.use('/api/dashboard', require('./routes/dashboardRoutes'));
-app.use('/api/gallery', require('./routes/galleryRoutes'));
+app.use('/api/appointments', generalLimiter, require('./routes/appointmentRoutes'));
+app.use('/api/customers', generalLimiter, require('./routes/customerRoutes'));
+app.use('/api/services', generalLimiter, require('./routes/serviceRoutes'));
+app.use('/api/barbers', generalLimiter, require('./routes/barberRoutes'));
+app.use('/api/dashboard', generalLimiter, require('./routes/dashboardRoutes'));
+app.use('/api/gallery', generalLimiter, require('./routes/galleryRoutes'));
 
 // SSE endpoint for real-time updates
 app.get('/api/events', (req, res) => {
