@@ -1,5 +1,6 @@
 
 import api from './api';
+import { authStorage } from './authStorage';
 
 // ============================================
 
@@ -12,19 +13,19 @@ export const authAPI = {
   // Login with email/password
   login: async (email, password) => {
     const response = await api.post('/auth/login', { email, password });
-    
+
     if (response.data.success) {
       const { token, user } = response.data.data;
-      
-      localStorage.setItem('token', token);
-      localStorage.setItem('user', JSON.stringify(user));
-      localStorage.setItem('userRole', user.role || 'customer');
-      
+
+      authStorage.setToken(token, user.role);
+      authStorage.setUser(user, user.role);
+      authStorage.setUserRole(user.role);
+
       api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-      
+
       return response.data;
     }
-    
+
     throw new Error(response.data.message || 'Login failed');
   },
 
@@ -34,19 +35,19 @@ export const authAPI = {
   // Google OAuth login (admin only)
   googleLogin: async (googleToken) => {
     const response = await api.post('/auth/google', { token: googleToken });
-    
+
     if (response.data.success) {
       const { token, user } = response.data.data;
-      
-      localStorage.setItem('token', token);
-      localStorage.setItem('user', JSON.stringify(user));
-      localStorage.setItem('userRole', user.role || 'customer');
-      
+
+      authStorage.setToken(token, user.role);
+      authStorage.setUser(user, user.role);
+      authStorage.setUserRole(user.role);
+
       api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-      
+
       return response.data;
     }
-    
+
     throw new Error(response.data.message || 'Login failed');
   },
 
@@ -142,9 +143,9 @@ export const authAPI = {
     if (response.data.success) {
       const { token, user } = response.data.data;
 
-      localStorage.setItem('token', token);
-      localStorage.setItem('user', JSON.stringify(user));
-      localStorage.setItem('userRole', user.role || 'customer');
+      authStorage.setToken(token, user.role);
+      authStorage.setUser(user, user.role);
+      authStorage.setUserRole(user.role);
       api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
 
       return response.data;
@@ -162,19 +163,14 @@ export const authAPI = {
     } catch (error) {
       console.error('Logout API call failed:', error);
     } finally {
-      // Clear local storage regardless of API call success
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    localStorage.removeItem('userRole');
-
-      // Remove auth header
-    delete api.defaults.headers.common['Authorization'];
-  }
+      authStorage.clearAll();
+      delete api.defaults.headers.common['Authorization'];
+    }
   },
 
   // Verify token validity
   verifyToken: async () => {
-    const token = localStorage.getItem('token');
+    const token = authStorage.getToken();
     if (!token) {
       throw new Error('No token found');
     }
@@ -194,61 +190,27 @@ export const authAPI = {
 // AUTH UTILITIES
 // ============================================
 export const authUtils = {
-  // Check if user is authenticated
-  isAuthenticated: () => {
-    const token = localStorage.getItem('token');
-    const user = localStorage.getItem('user');
-    return !!(token && user);
-  },
+  isAuthenticated: () => authStorage.isAuthenticated(),
 
-  // Get current user
-  getCurrentUser: () => {
-    const userData = localStorage.getItem('user');
-    if (userData) {
-      try {
-        return JSON.parse(userData);
-      } catch (error) {
-        console.error('Error parsing user data:', error);
-        return null;
-      }
-    }
-    return null;
-  },
+  getCurrentUser: () => authStorage.getUser(),
 
-  // Get user role
-  getUserRole: () => {
-    return localStorage.getItem('userRole') || 'customer';
-  },
+  getUserRole: () => authStorage.getUserRole(),
 
-  // Check if user has specific role
-  hasRole: (role) => {
-    const userRole = authUtils.getUserRole();
-    return userRole === role;
-  },
+  hasRole: (role) => authStorage.getUserRole() === role,
 
-  // Check if user is admin
-  isAdmin: () => {
-    return authUtils.hasRole('admin');
-  },
+  isAdmin: () => authStorage.isAdmin(),
 
-  // Get auth token
-  getToken: () => {
-    return localStorage.getItem('token');
-  },
+  getToken: () => authStorage.getToken(),
 
-  // Set up auth header for API calls
   setupAuthHeader: () => {
-    const token = authUtils.getToken();
+    const token = authStorage.getToken();
     if (token) {
       api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
     }
   },
 
-  // Clear auth data
   clearAuth: () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    localStorage.removeItem('userRole');
+    authStorage.clearAll();
     delete api.defaults.headers.common['Authorization'];
   }
 };

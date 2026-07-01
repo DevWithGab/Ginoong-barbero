@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { authStorage } from './authStorage';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5001/api';
 
@@ -14,7 +15,7 @@ const isAdminPage = () => window.location.pathname.startsWith('/admin');
 
 // Add token to requests if it exists
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token');
+  const token = authStorage.getToken();
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
@@ -30,9 +31,7 @@ api.interceptors.response.use(
   (error) => {
     const isLoginPage = window.location.pathname === '/admin/login';
     if (error.response?.status === 401 && !isLoginPage) {
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      localStorage.removeItem('userRole');
+      authStorage.clearAll();
       window.location.href = '/admin/login';
     }
     return Promise.reject(error);
