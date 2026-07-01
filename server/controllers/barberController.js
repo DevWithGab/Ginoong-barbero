@@ -125,7 +125,7 @@ const getBarber = asyncHandler(async (req, res) => {
 // @access  Public
 const createBarber = asyncHandler(async (req, res) => {
   const { name, role, status, workingHours, workingDays } = req.body;
-  const profileImage = req.file ? `/uploads/barbers/${req.file.filename}` : '';
+  const profileImage = req.file ? req.file.path : '';
 
   const barber = await Barber.create({
     name,
@@ -161,7 +161,7 @@ const updateBarber = asyncHandler(async (req, res) => {
   if (workingDays) barber.workingDays = typeof workingDays === 'string' ? JSON.parse(workingDays) : workingDays;
 
   if (req.file) {
-    barber.profileImage = `/uploads/barbers/${req.file.filename}`;
+    barber.profileImage = req.file.path;
   } else if (profileImage !== undefined) {
     barber.profileImage = profileImage;
   }

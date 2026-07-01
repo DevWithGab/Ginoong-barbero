@@ -125,7 +125,7 @@ const getService = asyncHandler(async (req, res) => {
 // @access  Public
 const createService = asyncHandler(async (req, res) => {
   const { name, description, category, duration, price, status } = req.body;
-  const image = req.file ? `/uploads/services/${req.file.filename}` : null;
+  const image = req.file ? req.file.path : null;
 
   // Check if service with same name already exists
   const existingService = await Service.findOne({ name });
@@ -181,7 +181,7 @@ const updateService = asyncHandler(async (req, res) => {
   if (status) service.status = status;
 
   if (req.file) {
-    service.image = `/uploads/services/${req.file.filename}`;
+    service.image = req.file.path;
   }
 
   const updatedService = await service.save();
