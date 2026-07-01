@@ -18,7 +18,7 @@ const getGalleryImage = asyncHandler(async (req, res) => {
 
 const createGalleryImage = asyncHandler(async (req, res) => {
   const body = req.body || {};
-  const imageUrl = req.file ? `/uploads/gallery/${req.file.filename}` : body.url;
+  const imageUrl = req.file ? req.file.path : body.url;
   if (!imageUrl) { res.status(400); throw new Error('Image file or URL is required'); }
 
   const categoryValue = (body.category || '').trim();
@@ -45,7 +45,7 @@ const updateGalleryImage = asyncHandler(async (req, res) => {
 
   const body = req.body || {};
   if (body.title !== undefined) image.title = body.title;
-  if (req.file) image.url = `/uploads/gallery/${req.file.filename}`;
+  if (req.file) image.url = req.file.path;
   else if (body.url !== undefined) image.url = body.url;
   if (body.category !== undefined) image.category = body.category.trim();
   if (body.description !== undefined) image.description = body.description;
